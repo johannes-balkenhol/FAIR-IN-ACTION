@@ -9,8 +9,8 @@ abstract: >-
   human — so that researchers are asked only for what nobody else can know.
 type: software
 authors:
-  - family-names: "<FILL IN>"
-    given-names: "<FILL IN>"
+  - family-names: "Balkenhol"
+    given-names: "Johannes"
     orcid: "https://orcid.org/0000-0000-0000-0000"
     affiliation: "Core Unit Research Data Management (cRDM), Universität Würzburg"
 license: MIT
