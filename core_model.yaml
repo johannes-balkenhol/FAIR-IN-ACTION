@@ -1,41 +1,52 @@
 # =============================================================================
 # core_model.yaml  —  FAIR in action, core metadata model
-# -----------------------------------------------------------------------------
+# =============================================================================
+# v0.2.0 — expanded after review found v0.1 too thin.
+#
+# What v0.1 got wrong:
+#   * NO OPEN EXTENSION. MAGE-TAB works because Characteristics[*] and Comment[*]
+#     are arbitrary key-value columns. A closed field list cannot express a real
+#     SDRF. Fixed: `characteristics` and `comments` at sample level.
+#   * NO PROTOCOLS AS OBJECTS. The ArrayExpress IDF requires NAMED protocols that
+#     each SDRF row references. v0.1 had loose `*_protocol` strings, which cannot
+#     produce a valid IDF. Fixed: a `protocol` level.
+#   * NO GENOTYPE. Half of infection immunology is knockout and reporter mice.
+#     "organism: Mus musculus" says nothing.
+#   * NO MICROBIAL STATUS. SPF vs germ-free vs gnotobiotic. A03's entire premise.
+#   * NO ETHICS. Animal licence and consent are demanded by journals and repositories.
+#   * NO MOI. The standard unit of an infection experiment was simply absent.
+#
 # THIS FILE NEVER NAMES A PROJECT.  Project specifics live in project.yaml.
 #
-#   core_model.yaml  +  project.yaml   =   that project's schema
-#                                          -> gapsheet, validator, exporter, audit
+#   source: auto     -> extractors read it from the data. NEVER ask a human.
+#           project  -> project.yaml. Written once, inherited by every sample.
+#           human    -> the ONLY fields that reach the gap-sheet. Keep this small.
 #
-# Every field carries:
-#   source: auto     -> filled by extractors/<assay>.py from the data itself
-#           project  -> inherited from project.yaml
-#           human    -> ONLY these reach the gap-sheet. Keep this list short.
-#   tier:   bronze | silver | gold     (what audit.py scores)
-#   why:    shown to the human in the gap-sheet. Improves fill quality. Mandatory.
+#   tier:   bronze | silver | gold      (what audit.py scores)
+#   why:    shown to the human. A field you cannot justify should not exist.
 #
-# STATUS: v0 STRAWMAN. The ArrayExpress nesting below is inferred, not verified
-#         against a real accepted SDRF/IDF. Correct it against PANC E-MTAB-17360.
+# STATUS: the ArrayExpress nesting is still INFERRED, not verified against an
+#         accepted SDRF/IDF. Correct it against PANC E-MTAB-17360.
 # =============================================================================
 
-model_version: "0.1.0-draft"
+model_version: "0.2.0-draft"
 
-# ---------------------------------------------------------------------------
-# Ontology registry. Core bindings are fixed for all projects.
-# Projects may ADD (project.yaml: ontology_extensions), never override.
-# ---------------------------------------------------------------------------
 ontologies:
-  NCBITaxon: {name: NCBI Taxonomy,        use: organism}
-  UBERON:    {name: Uber-anatomy Ontology, use: tissue / anatomical site}
-  CL:        {name: Cell Ontology,         use: cell type}
+  NCBITaxon: {name: NCBI Taxonomy,                use: organism}
+  UBERON:    {name: Uber-anatomy Ontology,        use: tissue / anatomical site}
+  CL:        {name: Cell Ontology,                use: cell type}
   EFO:       {name: Experimental Factor Ontology, use: assay, instrument, disease}
   OBI:       {name: Ontology for Biomedical Investigations, use: protocol, assay}
-  MONDO:     {name: Mondo Disease Ontology, use: disease}
-  PATO:      {name: Phenotype and Trait Ontology, use: qualifiers (sex, age unit)}
-  CHEBI:     {name: Chemical Entities of Biological Interest, use: treatment compound}
+  MONDO:     {name: Mondo Disease Ontology,       use: disease}
+  PATO:      {name: Phenotype and Trait Ontology, use: qualifiers}
+  CHEBI:     {name: Chemical Entities of Biological Interest, use: compound}
+  MmusDv:    {name: Mouse Developmental Stages,   use: developmental stage (mouse)}
+  HsapDv:    {name: Human Developmental Stages,   use: developmental stage (human)}
+  PR:        {name: Protein Ontology,             use: antibody antigen}
+  MS:        {name: PSI Mass Spectrometry Ontology, use: mass spectrometer}
 
 # ---------------------------------------------------------------------------
 # LEVEL 0 — PROJECT
-# One per project. Mostly source: project (i.e. read from project.yaml).
 # ---------------------------------------------------------------------------
 project:
   project_id:        {source: project, type: string,  tier: bronze, why: "Stable internal key. Appears in every filename and every metadata row."}
@@ -46,13 +57,19 @@ project:
   pis:               {source: project, type: 'list[person]', tier: bronze, why: "Who is accountable for this data in 10 years."}
   contributors:      {source: project, type: 'list[person]', tier: silver, why: "Credit. Without ORCIDs, credit does not survive a name change or a move."}
   data_steward:      {source: project, type: person,  tier: silver, why: "The one person who answers metadata questions. If nobody, nobody does."}
-  licence:           {source: project, type: 'enum[MIT, Apache-2.0, CC-BY-4.0, CC0-1.0]', tier: bronze, why: "Data with no licence is legally unreusable, however open it looks."}
+  licence:           {source: project, type: 'enum[MIT, Apache-2.0, CC-BY-4.0, CC0-1.0, CC-BY-NC-4.0]', tier: bronze, why: "Data with no licence is legally unreusable, however open it looks."}
   sensitivity:       {source: project, type: 'enum[open, restricted, pseudonymised, identifying]', tier: bronze, why: "Determines whether this may touch the cloud at all (SOP 13)."}
   embargo_until:     {source: project, type: date, required: false, tier: silver, why: "Repositories support embargo. Use it instead of not depositing."}
+  release_date:      {source: project, type: date, required: false, tier: silver, why: "When the record goes public. Repositories ask for this explicitly."}
 
-  # ---- organisms: MULTI-ORGANISM IS CORE, NOT AN EXTENSION -----------------
-  # A06 (host + A. fumigatus), A03 (host + bacteria + virus), A04 (organoid +
-  # C. difficile) are the same construct. Design it in once.
+  # ---- ETHICS — absent from v0.1, required by journals and repositories ------
+  ethics:
+    animal_licence:  {source: project, type: string, required: false, tier: silver, why: "Regierung von Unterfranken licence number. Journals will ask. It exists on paper and nowhere else."}
+    ethics_approval: {source: project, type: string, required: false, tier: silver, why: "Ethics committee reference for human material. Without it, human data cannot be deposited at all."}
+    ethics_body:     {source: project, type: string, required: false, tier: silver, why: "Which committee approved it."}
+    consent_type:    {source: project, type: 'enum[not applicable, broad consent, study-specific, waiver]', required: false, tier: silver, why: "Determines whether the data may be shared, and on what terms."}
+    gdpr_basis:      {source: project, type: string, required: false, tier: silver, why: "Legal basis for processing personal data. Without it, pseudonymised human data cannot leave the institute (SOP 13)."}
+
   organisms:
     source: project
     type: 'list[organism]'
@@ -61,116 +78,189 @@ project:
     item_schema:
       taxon:  {ontology: NCBITaxon, required: true}
       role:   {type: 'enum[host, pathogen, commensal, symbiont, vector, other]', required: true}
-      strain: {type: string, required: false}
+      strain: {type: string, required: false, why: "A. fumigatus CEA10 and Af293 behave differently. So do C57BL/6J and C57BL/6N."}
 
-  # ---- identifiers: the machine-traversable research object ----------------
   identifiers:
     code_repo_url:   {source: project, type: url,  tier: bronze, why: "Analysis code in public git. Without it the figures cannot be regenerated."}
     code_doi:        {source: auto,    type: doi,  tier: silver, why: "Zenodo mints this automatically on GitHub release. Costs nothing, so there is no excuse."}
-    data_accession:  {source: human,   type: string, tier: silver, why: "E-MTAB / GSE / S-BIAD. The only durable pointer to the data itself."}
+    data_accession:  {source: human,   type: string, tier: silver, why: "E-MTAB / GSE / PXD / S-BIAD. The only durable pointer to the data itself."}
     paper_doi:       {source: human,   type: doi, required: false, tier: silver, why: "Closes the loop from data back to the claim it supports."}
     cross_linked:    {source: auto,    type: bool, tier: gold,   why: "GOLD. Code DOI -> data accession -> paper DOI, and back. Separate identifiers are silver; a traversable graph is the 'I' in FAIR."}
     orcids_complete: {source: auto,    type: bool, tier: gold,   why: "GOLD. Zenodo defaults to your GitHub username as author. Nobody fixes this. Fix this."}
 
   deposition_target:
     source: project
-    type: "list[enum[ArrayExpress, GEO, BioImage-Archive, PRIDE, Zenodo, ENA]]"
+    type: "list[enum[ArrayExpress, GEO, ENA, BioImage-Archive, PRIDE, FlowRepository, Zenodo]]"
     tier: silver
     why: "Chosen at project start, not at paper submission. It determines the metadata schema you must satisfy."
 
 # ---------------------------------------------------------------------------
-# LEVEL 1 — SAMPLE (biological entity)
-# The unit of the model. Everything below hangs off sample_id.
+# LEVEL 0b — PROTOCOL   (NEW in v0.2)
+# The ArrayExpress IDF requires NAMED protocols; every SDRF row references them
+# by name. Without this level a valid IDF cannot be emitted at all — which is a
+# large part of why the PANC submission took days. Protocols are written ONCE per
+# project and referenced N times, so they are `source: project`, not per-sample.
+# ---------------------------------------------------------------------------
+protocol:
+  protocol_name: {source: project, type: string, tier: bronze, why: "The name the SDRF will reference. Must be unique within the project."}
+  protocol_type: {source: project, ontology: EFO, tier: bronze, why: "growth / treatment / nucleic acid extraction / library construction / nucleic acid sequencing / normalization data transformation. Controlled — the IDF rejects free text."}
+  description:   {source: human,   type: text, tier: bronze, why: "The actual method. This IS your paper's methods section, written once and reused. If it is in the ELN, paste it."}
+  hardware:      {source: auto,    type: string, required: false, tier: silver, why: "Instrument used by this protocol. Extractable for sequencing and MS."}
+  software:      {source: auto,    type: string, required: false, tier: silver, why: "Software + version, from logs. Nobody should type 'CellRanger 7.1.0' by hand."}
+  performer:     {source: human,   type: string, required: false, tier: silver, why: "Who did it. Provenance — and the person to ask in two years."}
+
+# ---------------------------------------------------------------------------
+# LEVEL 1 — SAMPLE
 # ---------------------------------------------------------------------------
 sample:
-  sample_id:        {source: human,   type: string, tier: bronze, why: "Your name for this biological sample. Must match the lab book and the filenames."}
-  organism_ref:     {source: human,   type: 'ref[project.organisms]', tier: bronze, why: "Which organism(s) are IN this sample. Dual/triple RNA-seq samples reference more than one."}
-  tissue:           {source: human,   ontology: UBERON, required: false, tier: silver, why: "Anatomical site. Enables cross-study queries in community databases."}
-  cell_type:        {source: human,   ontology: CL, required: false, tier: silver, why: "Sorted population or annotated cluster. 'Alveolar macrophage' = CL:0000583, not free text."}
-  cell_line:        {source: project, type: string, required: false, tier: silver, why: "If immortalised, age/sex are 'not applicable' downstream — declare it once here."}
-  disease:          {source: project, ontology: MONDO, required: false, tier: silver, why: "Disease context. Free text here is why cross-study search fails."}
-  sex:              {source: human,   type: 'enum[male, female, mixed, not applicable, unknown]', tier: silver, why: "Required by ArrayExpress for every sample, including cell lines."}
-  age:              {source: human,   type: quantity, required: false, tier: silver, why: "Required by ArrayExpress. 'not applicable' is a valid answer for cell lines."}
-  growth_condition: {source: human,   type: string, required: false, tier: silver, why: "2D vs 3D, organoid, matrix. Changes the biology and is invisible in the data."}
+  sample_id:    {source: human, type: string, tier: bronze, why: "Your name for this biological sample. Must match the lab book and the filenames."}
+  organism_ref: {source: human, type: 'ref[project.organisms]', tier: bronze, why: "Which organism(s) are IN this sample. Dual/triple RNA-seq samples reference more than one."}
+  tissue:       {source: human, ontology: UBERON, required: false, tier: silver, why: "Anatomical site. Enables cross-study queries in community databases."}
+  cell_type:    {source: human, ontology: CL, required: false, tier: silver, why: "Sorted population or annotated cluster. 'Alveolar macrophage' = CL:0000583, not free text."}
+  disease:      {source: project, ontology: MONDO, required: false, tier: silver, why: "Disease context. Free text here is why cross-study search fails."}
+  sex:          {source: human, type: 'enum[male, female, mixed, not applicable, unknown]', tier: silver, why: "Required by ArrayExpress for every sample, including cell lines."}
+  age:          {source: human, type: quantity, required: false, tier: silver, why: "Required by ArrayExpress. 'not applicable' is valid for cell lines."}
+  developmental_stage: {source: human, ontology: MmusDv, required: false, tier: silver, why: "Adult / neonatal / embryonic. Neonatal immunology is a different organism, immunologically speaking."}
 
-  # ---- experimental design: the factors that define the comparison ---------
+  # ---- GENOTYPE — absent from v0.1. This IS infection immunology. ------------
+  genotype:
+    strain_background: {source: human, type: string, required: false, tier: bronze, why: "C57BL/6J and C57BL/6N differ (Nnt deletion) and give different immune phenotypes. 'C57BL/6' is not an answer."}
+    genetic_mod:       {source: human, type: 'enum[wild type, knockout, knock-in, transgenic, conditional (Cre-lox), reporter, CRISPR-edited]', required: false, tier: bronze, why: "The single most important fact about a mouse — and the one most often lost between the animal facility and the sequencer."}
+    allele:            {source: human, type: string, required: false, tier: silver, why: "e.g. Cd11c-Cre; Ifnar1-fl/fl. MGI nomenclature if you have it. This IS the experiment."}
+    zygosity:          {source: human, type: 'enum[not applicable, homozygous, heterozygous, hemizygous]', required: false, tier: silver, why: "Het and homo are different animals."}
+
+  # ---- HUSBANDRY — A03's entire premise, unrepresentable in v0.1 -------------
+  husbandry:
+    microbial_status: {source: human, type: 'enum[not applicable, conventional, SPF, germ-free, gnotobiotic, antibiotic-treated]', required: false, tier: bronze, why: "Germ-free vs SPF changes the immune system wholesale. For microbiota work this is THE variable — and it appears nowhere in the sequencing data."}
+    colonisation:     {source: human, type: string, required: false, tier: silver, why: "Gnotobiotic: which consortium (OMM12, ASF, SIHUMI) or which strain."}
+    diet:             {source: human, type: string, required: false, tier: silver, why: "Fibre-free, high-fat, butyrate-supplemented. Diet is a treatment even when nobody calls it one."}
+    facility:         {source: project, type: string, required: false, tier: silver, why: "Animal facility. Different facilities = different microbiota = the classic irreproducibility story."}
+
+  # ---- cell-line specifics --------------------------------------------------
+  cell_line:         {source: project, type: string, required: false, tier: silver, why: "If immortalised, age and sex become 'not applicable' downstream — declare it once here."}
+  cellosaurus_id:    {source: project, type: string, required: false, tier: gold, why: "GOLD. CVCL_0480 identifies PANC-1 unambiguously and forever. A name does not."}
+  passage_number:    {source: human, type: int, required: false, tier: silver, why: "Cells drift. A passage-40 line is not the line you started with."}
+  mycoplasma_tested: {source: human, type: bool, required: false, tier: silver, why: "Journals increasingly require it. It is one checkbox, and it is never recorded."}
+  growth_condition:  {source: human, type: string, required: false, tier: silver, why: "2D, 3D, organoid, scaffold, matrix. Changes the biology and is invisible in the data."}
+
+  # ---- experimental design --------------------------------------------------
   factors:
     source: human
     type: 'list[factor]'
     tier: bronze
     why: "The variables you are comparing. If these are wrong, the whole submission describes the wrong experiment."
     item_schema:
-      name:  {type: string, required: true}     # e.g. treatment, timepoint, infection
-      value: {type: string, required: true}
-      unit:  {type: string, required: false}
-      ontology: {type: curie, required: false}  # CHEBI for compounds, EFO for time
+      name:     {type: string, required: true}
+      value:    {type: string, required: true}
+      unit:     {type: string, required: false}
+      ontology: {type: curie, required: false}
 
   infection:
     source: human
     type: 'list[infection_event]'
     required: false
     tier: silver
-    why: "Co-infection order and interval are the experiment. A flat 'treatment' string cannot express 'pathogen A at -24h, pathogen B at 0h'."
+    why: "Co-infection order and interval ARE the experiment. A flat 'treatment' string cannot express 'pathogen A at -24 h, pathogen B at 0 h'."
     item_schema:
-      agent_ref: {type: 'ref[project.organisms]', required: true}
-      dose:      {type: quantity, required: false}
-      route:     {type: string, required: false}
-      time_rel_h: {type: number, required: true, why: "Hours relative to the primary challenge (t=0). Negative = prior infection."}
+      agent_ref:  {type: 'ref[project.organisms]', required: true}
+      moi:        {type: number, required: false, why: "Multiplicity of infection — the standard unit, and missing from v0.1 entirely."}
+      dose:       {type: quantity, required: false, why: "CFU or conidia, in vivo, where MOI does not apply."}
+      viability:  {type: 'enum[live, heat-killed, UV-inactivated, fixed]', required: false, why: "Heat-killed controls are half of infection biology, and a boolean 'infected' erases them."}
+      route:      {type: 'enum[intranasal, intratracheal, oral gavage, intravenous, intraperitoneal, in vitro]', required: false}
+      time_rel_h: {type: number, required: true, why: "Hours relative to the primary challenge (t=0). NEGATIVE = prior infection. This is how co-infection order is expressed."}
+
+  treatment:
+    source: human
+    type: 'list[treatment_event]'
+    required: false
+    tier: silver
+    why: "Compounds, cytokines, antibiotics. Separate from infection, because a drug is not a pathogen."
+    item_schema:
+      compound:   {ontology: CHEBI, required: true}
+      dose:       {type: quantity, required: true}
+      vehicle:    {type: string, required: false, why: "DMSO is not nothing. The vehicle control is a condition and needs the same annotation."}
+      time_rel_h: {type: number, required: true}
+
+  # ---- THE OPEN EXTENSION — the mechanism v0.1 lacked entirely ---------------
+  # MAGE-TAB works because Characteristics[*] is an OPEN column set. Any closed
+  # field list will fail to express a real SDRF. These map 1:1 onto SDRF columns.
+  characteristics:
+    source: human
+    type: 'list[characteristic]'
+    required: false
+    tier: silver
+    why: "Anything true of the sample that the core does not name. Maps directly to SDRF Characteristics[name]. Use an ontology term where one exists — this is an escape hatch, not a licence for free text."
+    item_schema:
+      name:     {type: string, required: true}
+      value:    {type: string, required: true}
+      ontology: {type: curie, required: false}
+      unit:     {type: string, required: false}
+
+  comments:
+    source: human
+    type: 'list[comment]'
+    required: false
+    tier: silver
+    why: "Maps to SDRF/IDF Comment[name]. Repository-specific fields live here rather than polluting the core."
 
 # ---------------------------------------------------------------------------
-# LEVEL 2 — EXTRACT (nucleic acid / protein prep from a sample)
+# LEVEL 2 — EXTRACT
 # ---------------------------------------------------------------------------
 extract:
-  extract_id:       {source: human,  type: string, tier: bronze, why: "One sample can yield several extracts. This is where 1:N starts."}
-  sample_ref:       {source: human,  type: 'ref[sample.sample_id]', tier: bronze, why: "Parent link. Without it the hierarchy collapses to a flat table."}
-  material_type:    {source: project, type: 'enum[total RNA, polyA RNA, DNA, protein, cell]', tier: bronze, why: "Controlled vocabulary. 'RNA' is not an accepted value."}
-  extraction_protocol: {source: project, type: text, tier: silver, why: "Referenced by name from the IDF. Write once per project, not once per sample."}
+  extract_id:    {source: human, type: string, tier: bronze, why: "One sample can yield several extracts. This is where 1:N starts."}
+  sample_ref:    {source: human, type: 'ref[sample.sample_id]', tier: bronze, why: "Parent link. Without it the hierarchy collapses to a flat table."}
+  material_type: {source: project, type: 'enum[total RNA, polyA RNA, DNA, protein, cell, nuclei, organoid]', tier: bronze, why: "Controlled vocabulary. 'RNA' is not an accepted value. Note 'nuclei' — snRNA-seq is not scRNA-seq, and the distinction is routinely lost."}
+  extraction_protocol_ref: {source: project, type: 'ref[protocol.protocol_name]', tier: silver, why: "Points at a NAMED protocol so the IDF and SDRF agree. This is what v0.1's loose string could not do."}
+  rin:           {source: human, type: number, required: false, tier: silver, why: "RNA integrity. A RIN of 4 explains a lot of 'biology' after the fact."}
+  input_amount:  {source: human, type: quantity, required: false, tier: silver, why: "ng of RNA or µg of protein into the library. Determines what was detectable at all."}
+  viability_pct: {source: human, type: number, required: false, tier: silver, why: "10x cell viability at load. Below ~80% ambient RNA ruins the run — and this number lives only on the facility's sheet."}
+  cells_loaded:  {source: human, type: int, required: false, tier: silver, why: "Determines the expected doublet rate. Without it your doublet call is unjustifiable."}
 
 # ---------------------------------------------------------------------------
 # LEVEL 3 — LIBRARY
-# THE CLASSIC MODELLING TRAP: the library count is NOT the biological sample
-# count. Multiplexed (CMO/hashing) designs have N samples -> 1 library.
-# Get this wrong and the whole SDRF is wrong. Ask a human. Always.
+# THE CLASSIC TRAP: library count is NOT biological sample count.
 # ---------------------------------------------------------------------------
 library:
-  library_id:       {source: human,  type: string, tier: bronze, why: "Sequencing library. May pool several samples — this is where multiplexing is expressed."}
-  extract_refs:     {source: human,  type: "list[ref[extract.extract_id]]", tier: bronze, why: "N:1 for multiplexed designs. THE single most common submission error."}
-  multiplex_tag:    {source: human,  type: string, required: false, tier: silver, why: "CMO / hashtag / index that maps a sample back out of a pooled library."}
+  library_id:       {source: human, type: string, tier: bronze, why: "Sequencing library. May pool several samples — this is where multiplexing is expressed."}
+  extract_refs:     {source: human, type: "list[ref[extract.extract_id]]", tier: bronze, why: "N:1 for multiplexed designs. THE single most common submission error."}
+  multiplex_tag:    {source: human, type: string, required: false, tier: silver, why: "CMO / hashtag / index that maps a sample back out of a pooled library."}
   library_strategy: {source: project, ontology: EFO, tier: bronze, why: "RNA-Seq, ATAC-seq, WGS. Controlled — 'OTHER' is a red flag to curators."}
   library_selection: {source: project, type: string, tier: silver, why: "Oligo-dT, random priming, none. Determines what the reads represent."}
-  library_layout:   {source: auto,   type: 'enum[SINGLE, PAIRED]', tier: bronze, why: "Read from the FASTQs. Never ask."}
+  library_layout:   {source: auto, type: 'enum[SINGLE, PAIRED]', tier: bronze, why: "Read from the FASTQs. Never ask."}
   library_source:   {source: project, type: string, tier: silver, why: "e.g. transcriptomic single cell."}
-  insert_size:      {source: human,  type: number, required: false, tier: silver, why: "Only the sequencing facility knows this. It is never in the data. Ask them once."}
-  construction_protocol: {source: project, type: text, tier: silver, why: "10x v3, Smart-seq2, DIA-MS. Named in the IDF, referenced per row in the SDRF."}
+  insert_size:      {source: human, type: number, required: false, tier: silver, why: "Only the sequencing facility knows this. It is never in the data. Ask them once."}
+  construction_protocol_ref: {source: project, type: 'ref[protocol.protocol_name]', tier: silver, why: "Named protocol, referenced by the SDRF."}
+  index_sequence:   {source: auto, type: string, required: false, tier: silver, why: "Extractable from the FASTQ header. Repositories ask for it; nobody should type it."}
 
 # ---------------------------------------------------------------------------
-# LEVEL 4 — ASSAY / RUN   (almost entirely source: auto — this is the payoff)
+# LEVEL 4 — ASSAY / RUN   (mostly source: auto — this is where the payoff is)
 # ---------------------------------------------------------------------------
 assay:
-  assay_id:         {source: auto, type: string, tier: bronze, why: "Derived from run + library."}
-  library_ref:      {source: auto, type: 'ref[library.library_id]', tier: bronze, why: "Parent link."}
-  technology_type:  {source: project, ontology: OBI, tier: bronze, why: "sequencing assay / imaging assay / mass spectrometry assay."}
-  instrument:       {source: auto, ontology: EFO, tier: bronze, why: "Extractable from FASTQ headers or raw file metadata. Never ask a human."}
-  run_date:         {source: human, type: date, required: false, tier: silver, why: "Often only in the facility's records. Batch effects are dated. Get it."}
-  read_length:      {source: auto, type: 'list[int]', tier: silver, why: "Read from the data."}
-  index_length:     {source: auto, type: 'list[int]', tier: silver, why: "Read from the data."}
+  assay_id:        {source: auto, type: string, tier: bronze, why: "Derived from run + library."}
+  library_ref:     {source: auto, type: 'ref[library.library_id]', tier: bronze, why: "Parent link."}
+  technology_type: {source: project, ontology: OBI, tier: bronze, why: "sequencing assay / imaging assay / mass spectrometry assay."}
+  instrument:      {source: auto, ontology: EFO, tier: bronze, why: "Extractable from FASTQ headers or raw file metadata. Never ask a human."}
+  flowcell_id:     {source: auto, type: string, required: false, tier: silver, why: "In the FASTQ header. It IS your batch variable — and it is free."}
+  lane:            {source: auto, type: string, required: false, tier: silver, why: "In the FASTQ header."}
+  run_date:        {source: human, type: date, required: false, tier: silver, why: "Often only in the facility's records. Batch effects are dated. Get it."}
+  batch:           {source: human, type: string, required: false, tier: silver, why: "If samples were processed on different days, say so. Integration methods need it and cannot infer it."}
+  sequencing_facility: {source: project, type: string, required: false, tier: silver, why: "Provenance — and the address of the person who knows the insert size."}
+  read_length:     {source: auto, type: 'list[int]', tier: silver, why: "Read from the data."}
+  index_length:    {source: auto, type: 'list[int]', tier: silver, why: "Read from the data."}
 
 # ---------------------------------------------------------------------------
-# LEVEL 5 — FILE
-# 100% auto. If any of these ever reaches a human, the extractor is broken.
+# LEVEL 5 — FILE   (100% auto. If any of this reaches a human, the extractor is broken.)
 # ---------------------------------------------------------------------------
 file:
-  file_name:        {source: auto, type: string, tier: bronze, why: "Extracted."}
-  file_ref:         {source: auto, type: 'ref[assay.assay_id]', tier: bronze, why: "Parent link."}
-  file_type:        {source: auto, type: 'enum[fastq, bam, h5ad, mtx, tiff, mzML, csv]', tier: bronze, why: "Extracted."}
-  file_role:        {source: auto, type: 'enum[raw, primary, processed]', tier: bronze, why: "SOP 5 layer. Drives what gets locked, what gets synced, what gets deposited."}
-  checksum_md5:     {source: auto, type: md5, tier: bronze, why: "Required by every repository. Also your only proof the file did not rot."}
-  size_bytes:       {source: auto, type: int, tier: bronze, why: "Extracted."}
+  file_name:    {source: auto, type: string, tier: bronze, why: "Extracted."}
+  file_ref:     {source: auto, type: 'ref[assay.assay_id]', tier: bronze, why: "Parent link."}
+  file_type:    {source: auto, type: 'enum[fastq, bam, h5ad, mtx, tiff, mzML, fcs, csv]', tier: bronze, why: "Extracted."}
+  file_role:    {source: auto, type: 'enum[raw, primary, processed]', tier: bronze, why: "SOP 5 layer. Drives what gets locked, what gets synced, what gets deposited."}
+  read_type:    {source: auto, type: 'enum[not applicable, read1, read2, index1, index2]', required: false, tier: silver, why: "Which read a FASTQ is. ArrayExpress requires it per file, and it is already in the filename."}
+  checksum_md5: {source: auto, type: md5, tier: bronze, why: "Required by every repository. Also your only proof the file did not rot."}
+  size_bytes:   {source: auto, type: int, tier: bronze, why: "Extracted."}
 
-# ---------------------------------------------------------------------------
-# Derived, for audit.py — not stored, computed.
-# ---------------------------------------------------------------------------
 derived:
-  n_samples:        {source: auto, why: "Count. Sanity-check against what the PI believes."}
-  n_libraries:      {source: auto, why: "If n_libraries != n_samples, the design is multiplexed. Confirm this is intended."}
-  completeness:     {source: auto, why: "Fraction of required fields populated, per tier."}
+  n_samples:    {source: auto, why: "Count. Sanity-check against what the PI believes."}
+  n_libraries:  {source: auto, why: "If n_libraries != n_samples the design is multiplexed. Confirm that is intended."}
+  completeness: {source: auto, why: "Fraction of required fields populated, per tier."}

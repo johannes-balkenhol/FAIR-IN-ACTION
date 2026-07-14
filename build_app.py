@@ -74,7 +74,7 @@ def collect(tree, level):
     return out
 
 CORE_FIELDS = []
-for level in ("project", "sample", "extract", "library", "assay", "file"):
+for level in ("project", "protocol", "sample", "extract", "library", "assay", "file"):
     CORE_FIELDS += collect(core.get(level), level)
 
 LABELS = {"scrnaseq":"Single-cell RNA-seq","bulk-rnaseq":"Bulk / dual RNA-seq",
@@ -134,7 +134,14 @@ DEMO = {
 
 MODEL = {"model_version": core["model_version"], "profiles": profiles, "demo": DEMO}
 
-tpl = open(ROOT / "app" / "_template.html").read()
+tplp = ROOT / "app" / "_template.html"
+if not tplp.exists():
+    raise SystemExit(
+        "app/_template.html is missing.\n"
+        "The app is GENERATED from this template. Without it the repo cannot rebuild\n"
+        "its own app, and CI will fail. It must be committed."
+    )
+tpl = tplp.read_text()
 out = tpl.replace("/*__MODEL_JSON__*/", json.dumps(MODEL, ensure_ascii=False))
 (ROOT / "app").mkdir(exist_ok=True)
 open(ROOT / "app" / "metadata_app.html", "w").write(out)

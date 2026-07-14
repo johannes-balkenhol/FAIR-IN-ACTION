@@ -14,7 +14,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROV = {"project_id", "title", "description", "consortium", "funder_grant_id", "pis",
         "contributors", "data_steward", "licence", "sensitivity", "embargo_until",
         "run_date", "operator", "acquisition_date", "extraction_protocol"}
-DESIGN = {"factors", "infection"}
+DESIGN = {"factors", "infection", "treatment"}
 TYPE_RE = re.compile(r"^(enum|list|ref)\[(.*)\]$")
 
 CATEGORIES = [
@@ -43,8 +43,12 @@ def _category(level, name, decl):
         if name in ("identifiers", "deposition_target"): return "deposition"
         if name == "organisms": return "biological"
         return "provenance"
+    if level == "protocol":
+        return "technical"
     if level == "sample":
-        return "design" if name in DESIGN else "biological"
+        if name in DESIGN: return "design"
+        if name in ("characteristics", "comments"): return "design"
+        return "biological"
     return "provenance" if name in PROV else "technical"
 
 
@@ -91,7 +95,7 @@ def load_core(root: pathlib.Path = ROOT):
 
 def core_fields(core):
     out = []
-    for level in ("project", "sample", "extract", "library", "assay", "file"):
+    for level in ("project", "protocol", "sample", "extract", "library", "assay", "file"):
         out += _collect(core.get(level), level)
     return out
 

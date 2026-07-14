@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAIR in action — metadata capture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDEFE9; --panel:#F7F8F4; --ink:#1B211F; --muted:#6B7770; --rule:#CDD3CA;
+  --machine:#147D77;      /* extracted from the data      */
+  --project:#4C5B8C;      /* inherited from project.yaml  */
+  --you:#A9762A;          /* only you know this           */
+  --gold:#8A6D1F; --bad:#963B2E;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --cond:'IBM Plex Sans Condensed','IBM Plex Sans',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{display:grid;grid-template-columns:280px 1fr;gap:0;min-height:100vh}
+@media(max-width:900px){.wrap{grid-template-columns:1fr}.rail{position:static!important;height:auto!important;border-right:none!important;border-bottom:1px solid var(--rule)}}
+
+/* ---------- left rail: the ledger ---------- */
+.rail{position:sticky;top:0;height:100vh;overflow-y:auto;padding:22px 20px;border-right:1px solid var(--rule);background:var(--panel)}
+.brand{font-family:var(--cond);font-weight:700;font-size:21px;letter-spacing:-.01em;line-height:1.15}
+.brand span{color:var(--muted);font-weight:600}
+.sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
+.sel{width:100%;margin-top:16px;padding:8px 10px;font-family:var(--mono);font-size:12px;background:#fff;border:1px solid var(--rule);border-radius:2px;color:var(--ink)}
+label.lbl{display:block;font-family:var(--cond);font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 5px}
+
+/* the signature: source ledger */
+.ledger{margin-top:24px;border-top:1px solid var(--rule);padding-top:16px}
+.lrow{margin-bottom:13px}
+.lhead{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;margin-bottom:4px}
+.lhead b{font-family:var(--cond);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.lhead .n{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.bar{height:7px;background:#E1E5DE;border-radius:1px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.lnote{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.35}
+.m .bar i{background:var(--machine)} .m b{color:var(--machine)}
+.p .bar i{background:var(--project)} .p b{color:var(--project)}
+.y .bar i{background:var(--you)}     .y b{color:var(--you)}
+.nav{margin-top:22px;border-top:1px solid var(--rule);padding-top:14px}
+.nav a{display:block;padding:5px 0;font-size:13px;color:var(--muted);text-decoration:none;border-left:2px solid transparent;padding-left:9px}
+.nav a:hover,.nav a:focus{color:var(--ink);border-left-color:var(--ink);outline:none}
+.nav a .c{font-family:var(--mono);font-size:11px;float:right}
+
+/* ---------- main ---------- */
+main{padding:34px 40px 90px;max-width:1000px}
+@media(max-width:900px){main{padding:24px 18px 80px}}
+h1{font-family:var(--cond);font-weight:700;font-size:34px;margin:0 0 6px;letter-spacing:-.015em}
+.lede{color:var(--muted);max-width:62ch;margin:0 0 26px}
+.lede b{color:var(--ink);font-weight:600}
+
+section{margin-bottom:34px}
+h2{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+   border-bottom:1px solid var(--rule);padding-bottom:7px;margin:0 0 2px;display:flex;justify-content:space-between}
+h2 em{font-style:normal;font-family:var(--mono);font-weight:400;letter-spacing:0;text-transform:none;font-size:11px}
+
+/* field row: left spine encodes source */
+.f{display:grid;grid-template-columns:230px 1fr;gap:16px;padding:11px 0 11px 13px;border-bottom:1px solid #E3E7E0;border-left:3px solid var(--rule);align-items:start}
+@media(max-width:760px){.f{grid-template-columns:1fr;gap:5px}}
+.f.auto{border-left-color:var(--machine)}
+.f.project{border-left-color:var(--project)}
+.f.human{border-left-color:var(--you);background:linear-gradient(90deg,rgba(169,118,42,.05),transparent 55%)}
+.f.done{background:none}
+.k{font-weight:500}
+.k .req{color:var(--bad);margin-left:3px}
+.k .tier{font-family:var(--mono);font-size:10px;color:var(--muted);display:block;margin-top:2px}
+.k .tier.gold{color:var(--gold)}
+.why{font-size:12px;color:var(--muted);line-height:1.4;margin-top:3px;max-width:34ch}
+.v input,.v select,.v textarea{width:100%;padding:7px 9px;font-family:var(--mono);font-size:13px;background:#fff;
+  border:1px solid var(--rule);border-radius:2px;color:var(--ink)}
+.v textarea{min-height:56px;resize:vertical}
+.v input:focus,.v select:focus,.v textarea:focus{outline:2px solid var(--you);outline-offset:1px;border-color:var(--you)}
+.f.human .v input,.f.human .v select,.f.human .v textarea{border-color:#D6BE95}
+.locked{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:13px;color:var(--muted);
+  background:#E9ECE6;border:1px dashed var(--rule);border-radius:2px;padding:7px 9px}
+.locked .tag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:1px 5px;border-radius:2px;color:#fff;white-space:nowrap}
+.tag.a{background:var(--machine)} .tag.p{background:var(--project)}
+.ex{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
+.cv{position:relative}
+.hits{position:absolute;z-index:20;left:0;right:0;background:#fff;border:1px solid var(--rule);border-top:none;max-height:220px;overflow-y:auto}
+.hits div{padding:6px 9px;font-family:var(--mono);font-size:12px;cursor:pointer;border-bottom:1px solid #EEF0EA}
+.hits div:hover,.hits div.on{background:#F3EFE4}
+.hits .cur{color:var(--machine)}
+.hits .st{padding:6px 9px;color:var(--muted);font-size:11px;font-family:var(--sans)}
+
+/* ---------- output bar ---------- */
+.out{position:fixed;bottom:0;left:280px;right:0;background:var(--panel);border-top:1px solid var(--rule);
+  padding:12px 40px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media(max-width:900px){.out{left:0;padding:12px 18px}}
+.out select{padding:8px 10px;font-family:var(--mono);font-size:12px;background:#fff;border:1px solid var(--rule);border-radius:2px;min-width:270px}
+button{font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.03em;padding:9px 15px;border-radius:2px;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--paper)}
+button.ghost{background:transparent;color:var(--ink)}
+button:hover{opacity:.87}
+button:focus-visible{outline:2px solid var(--you);outline-offset:2px}
+.status{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto}
+.status.warn{color:var(--bad)}
+
+dialog{border:1px solid var(--ink);border-radius:2px;padding:0;max-width:min(860px,92vw);width:100%;background:var(--panel)}
+dialog::backdrop{background:rgba(27,33,31,.45)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:13px 18px;border-bottom:1px solid var(--rule)}
+.dh b{font-family:var(--cond);font-size:15px;letter-spacing:.02em}
+dialog pre{margin:0;padding:18px;font-family:var(--mono);font-size:12px;line-height:1.55;overflow:auto;max-height:60vh;white-space:pre-wrap;background:#fff}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<aside class="rail">
+  <div class="brand">FAIR in action<br><span>metadata capture</span></div>
+  <div class="sub" id="ver">core v0.1.0-draft</div>
+
+  <label class="lbl" for="profile">Assay profile</label>
+  <select class="sel" id="profile"></select>
+
+  <label class="lbl" for="pid">Project</label>
+  <input class="sel" id="pid" value="MYPROJ" style="font-family:var(--mono)">
+
+  <div class="ledger">
+    <div class="lrow m">
+      <div class="lhead"><b>Machine</b><span class="n" id="n-auto">0</span></div>
+      <div class="bar"><i id="b-auto"></i></div>
+      <div class="lnote">Extracted from your files. Never asked.</div>
+    </div>
+    <div class="lrow p">
+      <div class="lhead"><b>Project</b><span class="n" id="n-project">0</span></div>
+      <div class="bar"><i id="b-project"></i></div>
+      <div class="lnote">Inherited from project.yaml. Written once.</div>
+    </div>
+    <div class="lrow y">
+      <div class="lhead"><b>You</b><span class="n" id="n-human">0</span></div>
+      <div class="bar"><i id="b-human"></i></div>
+      <div class="lnote" id="you-note">The only fields nobody else can answer.</div>
+    </div>
+  </div>
+
+  <nav class="nav" id="nav"></nav>
+</aside>
+
+<main>
+  <h1 id="title">Single-cell RNA-seq</h1>
+  <p class="lede">Everything the machine can read from your data and everything already in <b>project.yaml</b> is filled in below and locked. <b>Fill only the amber rows</b> — those are the fields that exist nowhere but in your head. Then export to whatever the next step needs.</p>
+  <form id="form" autocomplete="off"></form>
+</main>
+
+</div>
+
+<div class="out">
+  <select id="fmt" aria-label="Export format"></select>
+  <button id="go">Export</button>
+  <button class="ghost" id="fill">Simulate import from data</button>
+  <span class="status" id="status">—</span>
+</div>
+
+<dialog id="dlg">
+  <div class="dh"><b id="dt">Output</b>
+    <span><button class="ghost" id="copy">Copy</button> <button id="dl">Download</button> <button class="ghost" id="close">Close</button></span>
+  </div>
+  <pre id="dp"></pre>
+</dialog>
+
+<script>
+const MODEL = /*__MODEL_JSON__*/;
+
+/* ---------- controlled vocabulary: live OLS4, cached fallback ---------- */
+const CV_CACHE = {
+  CL:[["CL:0000583","alveolar macrophage"],["CL:0000235","macrophage"],["CL:0000775","neutrophil"],
+      ["CL:0000576","monocyte"],["CL:0000451","dendritic cell"],["CL:0000066","epithelial cell"],
+      ["CL:0002062","pulmonary alveolar type 1 cell"],["CL:0002063","pulmonary alveolar type 2 cell"],
+      ["CL:0000084","T cell"],["CL:0000236","B cell"],["CL:0000623","natural killer cell"]],
+  UBERON:[["UBERON:0002048","lung"],["UBERON:0002169","alveolus of lung"],["UBERON:0001155","colon"],
+      ["UBERON:0002108","small intestine"],["UBERON:0000178","blood"],["UBERON:0002106","spleen"],
+      ["UBERON:0002370","thymus"],["UBERON:0001264","pancreas"]],
+  NCBITaxon:[["NCBITaxon:9606","Homo sapiens"],["NCBITaxon:10090","Mus musculus"],
+      ["NCBITaxon:746128","Aspergillus fumigatus"],["NCBITaxon:1496","Clostridioides difficile"],
+      ["NCBITaxon:590","Salmonella"],["NCBITaxon:1280","Staphylococcus aureus"],
+      ["NCBITaxon:11320","Influenza A virus"],["NCBITaxon:2697049","SARS-CoV-2"]],
+  EFO:[["EFO:0008563","Illumina NovaSeq 6000"],["EFO:0008565","Illumina NextSeq 500"],["EFO:0000001","experimental factor"]],
+  MONDO:[["MONDO:0005061","lung adenocarcinoma"],["MONDO:0005192","pancreatic adenocarcinoma"],["MONDO:0005113","aspergillosis"]],
+  CHEBI:[["CHEBI:175901","gemcitabine"],["CHEBI:17968","butyrate"],["CHEBI:28864","lipopolysaccharide"]],
+  PR:[["PR:000001313","CD11c"],["PR:000001002","CD4"],["PR:000001004","CD8a"],["PR:000001024","CD45"]],
+  OBI:[["OBI:0002631","single-cell RNA sequencing assay"],["OBI:0001271","RNA-seq assay"],["OBI:0000470","mass spectrometry assay"]],
+  MS:[["MS:1002732","Orbitrap Exploris 480"],["MS:1003029","Orbitrap Astral"],["MS:1001911","Q Exactive"]]
+};
+
+async function lookup(onto, q){
+  const local = (CV_CACHE[onto]||[]).filter(([c,l]) =>
+    l.toLowerCase().includes(q.toLowerCase()) || c.toLowerCase().includes(q.toLowerCase()));
+  try{
+    const u = `https://www.ebi.ac.uk/ols4/api/select?q=${encodeURIComponent(q)}&ontology=${onto.toLowerCase()}&rows=8`;
+    const r = await fetch(u, {signal: AbortSignal.timeout(3500)});
+    if(!r.ok) throw 0;
+    const j = await r.json();
+    const hits = (j.response?.docs||[]).map(d => [d.obo_id||d.short_form, d.label]).filter(x=>x[0]);
+    return hits.length ? {hits, live:true} : {hits:local, live:false};
+  }catch(e){ return {hits:local, live:false}; }
+}
+
+/* ---------- state ---------- */
+let profile = Object.keys(MODEL.profiles)[0];
+const values = {};   // key -> value  (in-memory only)
+let simulated = false;
+
+const CATS = [
+  ["biological","Biological","who and what the sample is"],
+  ["design","Experimental design","the variables you are comparing"],
+  ["technical","Technical / assay","how the data were produced"],
+  ["provenance","Provenance & people","who is accountable, and when"],
+  ["deposition","Deposition & identifiers","where it goes and how it is cited"]
+];
+
+const fields = () => MODEL.profiles[profile].fields;
+const key = f => `${f.level}.${f.name}`;
+
+/* ---------- render ---------- */
+function render(){
+  const P = MODEL.profiles[profile];
+  document.getElementById('title').textContent = P.label;
+  document.getElementById('ver').textContent = `core v${MODEL.model_version} · ${P.profile}`;
+
+  const fmt = document.getElementById('fmt');
+  fmt.innerHTML = P.exports.map((e,i)=>`<option value="${i}">${e.name} — ${e.format}</option>`).join('')
+                + `<option value="yaml">project.yaml — the config itself</option>`
+                + `<option value="gap">gap-sheet — CSV of what is still missing</option>`
+                + `<option value="custom">custom — raw JSON of everything</option>`;
+
+  const form = document.getElementById('form');
+  form.innerHTML = '';
+  const nav = document.getElementById('nav');
+  nav.innerHTML = '';
+
+  for(const [cid, clabel, cdesc] of CATS){
+    const fs = fields().filter(f => f.category === cid);
+    if(!fs.length) continue;
+    const sec = document.createElement('section');
+    sec.id = 'sec-' + cid;
+    sec.innerHTML = `<h2>${clabel}<em>${cdesc}</em></h2>`;
+    fs.forEach(f => sec.appendChild(row(f)));
+    form.appendChild(sec);
+    const nHuman = fs.filter(f=>f.source==='human').length;
+    nav.insertAdjacentHTML('beforeend',
+      `<a href="#sec-${cid}">${clabel}<span class="c" style="color:${nHuman?'var(--you)':'var(--muted)'}">${nHuman?nHuman+' to fill':'✓'}</span></a>`);
+  }
+  meter();
+}
+
+function row(f){
+  const d = document.createElement('div');
+  d.className = 'f ' + f.source;
+  d.dataset.k = key(f);
+  const req = f.required === false ? '' : '<span class="req" title="required">*</span>';
+  const tier = f.tier ? `<span class="tier ${f.tier}">${f.tier}${f.ontology?' · '+f.ontology:''}</span>` : '';
+  d.innerHTML = `<div class="k">${f.name}${f.source==='human'?req:''}${tier}
+      <div class="why">${f.why||''}</div></div><div class="v"></div>`;
+  const v = d.querySelector('.v');
+
+  if(f.source !== 'human'){
+    const pre = f.default ?? (f.source==='auto' ? '⟨from data⟩' : '⟨from project.yaml⟩');
+    v.innerHTML = `<div class="locked"><span class="tag ${f.source==='auto'?'a':'p'}">${f.source==='auto'?'machine':'project'}</span>
+                   <span data-lock>${pre}</span></div>`;
+    if(f.default) values[key(f)] = f.default;
+    return d;
+  }
+
+  // human field
+  if(f.enum){
+    const sel = document.createElement('select');
+    sel.innerHTML = `<option value="">— choose —</option>` + f.enum.map(o=>`<option${o===f.default?' selected':''}>${o}</option>`).join('');
+    if(f.default) values[key(f)] = f.default;
+    sel.onchange = e => { values[key(f)] = e.target.value; touch(d, e.target.value); meter(); };
+    v.appendChild(sel);
+  } else if(f.ontology){
+    v.innerHTML = `<div class="cv"><input placeholder="type to search ${f.ontology} …" aria-label="${f.name}"><div class="hits" hidden></div></div>
+                   <div class="ex" data-ex></div>`;
+    const inp = v.querySelector('input'), box = v.querySelector('.hits'), ex = v.querySelector('[data-ex]');
+    let t;
+    inp.oninput = () => {
+      clearTimeout(t);
+      const q = inp.value.trim();
+      if(q.length < 2){ box.hidden = true; return; }
+      box.hidden = false; box.innerHTML = `<div class="st">searching ${f.ontology} …</div>`;
+      t = setTimeout(async () => {
+        const {hits, live} = await lookup(f.ontology, q);
+        if(!hits.length){ box.innerHTML = `<div class="st">no ${f.ontology} term matches. Do not type free text — ask the RDM team to extend the vocabulary.</div>`; return; }
+        box.innerHTML = hits.map(([c,l]) => `<div data-c="${c}"><span class="cur">${c}</span> ${l}</div>`).join('')
+          + (live ? '' : `<div class="st">offline — showing the bundled cache only</div>`);
+        box.querySelectorAll('[data-c]').forEach(el => el.onclick = () => {
+          const c = el.dataset.c;
+          inp.value = el.textContent.replace(c,'').trim();
+          values[key(f)] = c;
+          ex.textContent = c;
+          box.hidden = true; touch(d, c); meter();
+        });
+      }, 220);
+    };
+    inp.onblur = () => setTimeout(()=>box.hidden = true, 180);
+  } else if(f.type === 'text'){
+    const ta = document.createElement('textarea');
+    ta.oninput = e => { values[key(f)] = e.target.value; touch(d, e.target.value); meter(); };
+    v.appendChild(ta);
+  } else {
+    const inp = document.createElement('input');
+    inp.type = (f.type==='number'||f.type==='int') ? 'number' : (f.type==='date' ? 'date' : 'text');
+    if(f.default!==undefined){ inp.value = f.default; values[key(f)] = f.default; }
+    inp.oninput = e => { values[key(f)] = e.target.value; touch(d, e.target.value); meter(); };
+    v.appendChild(inp);
+  }
+  if(f.example) v.insertAdjacentHTML('beforeend', `<div class="ex">e.g. ${f.example}</div>`);
+  return d;
+}
+
+const touch = (d, val) => d.classList.toggle('done', !!String(val||'').trim());
+
+function meter(){
+  const fs = fields();
+  const tot = fs.length;
+  const c = {auto:0, project:0, human:0};
+  fs.forEach(f => c[f.source]++);
+  const filledHuman = fs.filter(f => f.source==='human' && String(values[key(f)]||'').trim()).length;
+  const done = {auto: simulated ? c.auto : 0, project: c.project, human: filledHuman};
+  for(const s of ['auto','project','human']){
+    document.getElementById('b-'+s).style.width = (100*done[s]/Math.max(c[s],1)) + '%';
+    document.getElementById('n-'+s).textContent = `${done[s]}/${c[s]}`;
+  }
+  const left = c.human - filledHuman;
+  const note = document.getElementById('you-note');
+  note.textContent = left === 0
+    ? 'Nothing left. Everything else was already known.'
+    : `${left} field${left===1?'':'s'} left — ${Math.round(100*(c.auto+c.project)/tot)}% of this form was filled without you.`;
+  const st = document.getElementById('status');
+  st.textContent = left ? `${left} required field${left===1?'':'s'} still empty` : 'complete — ready to export';
+  st.className = 'status' + (left ? ' warn' : '');
+}
+
+/* ---------- exports ---------- */
+const pid = () => document.getElementById('pid').value || 'MYPROJ';
+
+function gapSheet(){
+  const rows = [['field','level','ontology','allowed values','example','why we need it','YOUR VALUE']];
+  fields().filter(f => f.source==='human' && !String(values[key(f)]||'').trim())
+    .forEach(f => rows.push([f.name, f.level, f.ontology||'', (f.enum||[]).join(' | '), f.example||'', f.why||'', '']));
+  return rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+}
+
+function projectYaml(){
+  const P = MODEL.profiles[profile];
+  const L = [`# generated by FAIR in action — core v${MODEL.model_version}`,
+             `project_id: ${pid()}`, `profile: ${P.profile}`, `extends: core_model.yaml`, ``];
+  for(const [cid, clabel] of CATS){
+    const fs = fields().filter(f => f.category===cid && String(values[key(f)]||'').trim());
+    if(!fs.length) continue;
+    L.push(`# --- ${clabel} ---`);
+    fs.forEach(f => L.push(`${f.level}_${f.name}: ${JSON.stringify(values[key(f)])}`));
+    L.push('');
+  }
+  const missing = fields().filter(f => f.source==='human' && !String(values[key(f)]||'').trim());
+  if(missing.length){
+    L.push(`# !! INCOMPLETE — ${missing.length} required field(s) still unanswered:`);
+    missing.forEach(f => L.push(`# TODO ${f.level}.${f.name}   (${f.why||''})`));
+  }
+  return L.join('\n');
+}
+
+function exportAs(sel){
+  if(sel==='gap')    return ['gap-sheet (CSV)', gapSheet(), `${pid()}_gapsheet.csv`];
+  if(sel==='yaml')   return ['project.yaml', projectYaml(), `${pid()}_project.yaml`];
+  if(sel==='custom') return ['raw JSON', JSON.stringify({project_id:pid(), profile, values}, null, 2), `${pid()}_metadata.json`];
+  const e = MODEL.profiles[profile].exports[+sel];
+  const payload = {
+    export: e.name, format: e.format, mapping_file: e.map,
+    project_id: pid(), profile,
+    generated: new Date().toISOString().slice(0,10),
+    fields: Object.fromEntries(fields().map(f => [key(f), values[key(f)] ?? (f.source==='auto' ? '<extractor>' : null)]))
+  };
+  const missing = fields().filter(f => f.source==='human' && !values[key(f)]);
+  return [`${e.name} → ${e.format}`,
+    (missing.length ? `# WARNING: ${missing.length} required field(s) missing. This export is NOT submittable.\n` : '')
+    + `# The real exporter reads ${e.map} and emits ${e.format}.\n`
+    + `# This preview shows the validated model that would be handed to it.\n\n`
+    + JSON.stringify(payload, null, 2),
+    `${pid()}_${e.name}.json`];
+}
+
+/* ---------- wiring ---------- */
+const dlg = document.getElementById('dlg');
+let current = ['','',''];
+document.getElementById('go').onclick = () => {
+  current = exportAs(document.getElementById('fmt').value);
+  document.getElementById('dt').textContent = current[0];
+  document.getElementById('dp').textContent = current[1];
+  dlg.showModal();
+};
+document.getElementById('close').onclick = () => dlg.close();
+document.getElementById('copy').onclick = async () => {
+  try{ await navigator.clipboard.writeText(current[1]); document.getElementById('copy').textContent='Copied'; 
+       setTimeout(()=>document.getElementById('copy').textContent='Copy',1200); }catch(e){}
+};
+document.getElementById('dl').onclick = () => {
+  const b = new Blob([current[1]], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = current[2]; a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById('fill').onclick = () => {
+  simulated = !simulated;
+  document.querySelectorAll('.f.auto [data-lock]').forEach(el => {
+    const k = el.closest('.f').dataset.k;
+    el.textContent = simulated ? (MODEL.demo[k] ?? '⟨extracted⟩') : '⟨from data⟩';
+  });
+  document.getElementById('fill').textContent = simulated ? 'Clear imported values' : 'Simulate import from data';
+  meter();
+};
+document.getElementById('profile').onchange = e => { profile = e.target.value; simulated=false;
+  document.getElementById('fill').textContent='Simulate import from data'; render(); };
+document.getElementById('pid').oninput = () => {};
+
+document.getElementById('profile').innerHTML =
+  Object.entries(MODEL.profiles).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+render();
+</script>
+</body>
+</html>
