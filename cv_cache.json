@@ -1,0 +1,765 @@
+{
+ "CL": [
+  [
+   "CL:0000583",
+   "alveolar macrophage",
+   1
+  ],
+  [
+   "CL:0000235",
+   "macrophage",
+   1
+  ],
+  [
+   "CL:0000576",
+   "monocyte",
+   1
+  ],
+  [
+   "CL:0000775",
+   "neutrophil",
+   1
+  ],
+  [
+   "CL:0000451",
+   "dendritic cell",
+   1
+  ],
+  [
+   "CL:0000990",
+   "conventional dendritic cell",
+   1
+  ],
+  [
+   "CL:0000784",
+   "plasmacytoid dendritic cell",
+   0
+  ],
+  [
+   "CL:0000066",
+   "epithelial cell",
+   1
+  ],
+  [
+   "CL:0000082",
+   "epithelial cell of lung",
+   1
+  ],
+  [
+   "CL:0002062",
+   "pulmonary alveolar type 1 cell",
+   1
+  ],
+  [
+   "CL:0002063",
+   "pulmonary alveolar type 2 cell",
+   0
+  ],
+  [
+   "CL:0000158",
+   "club cell",
+   1
+  ],
+  [
+   "CL:0000064",
+   "ciliated cell",
+   1
+  ],
+  [
+   "CL:0000160",
+   "goblet cell",
+   1
+  ],
+  [
+   "CL:0002563",
+   "intestinal epithelial cell",
+   1
+  ],
+  [
+   "CL:0000510",
+   "paneth cell",
+   1
+  ],
+  [
+   "CL:0000584",
+   "enterocyte",
+   1
+  ],
+  [
+   "CL:0002250",
+   "intestinal crypt stem cell",
+   1
+  ],
+  [
+   "CL:0000084",
+   "T cell",
+   1
+  ],
+  [
+   "CL:0000624",
+   "CD4-positive, alpha-beta T cell",
+   1
+  ],
+  [
+   "CL:0000625",
+   "CD8-positive, alpha-beta T cell",
+   1
+  ],
+  [
+   "CL:0000815",
+   "regulatory T cell",
+   1
+  ],
+  [
+   "CL:0000798",
+   "gamma-delta T cell",
+   1
+  ],
+  [
+   "CL:0001065",
+   "innate lymphoid cell",
+   1
+  ],
+  [
+   "CL:0000236",
+   "B cell",
+   1
+  ],
+  [
+   "CL:0000786",
+   "plasma cell",
+   1
+  ],
+  [
+   "CL:0000623",
+   "natural killer cell",
+   1
+  ],
+  [
+   "CL:0000057",
+   "fibroblast",
+   1
+  ],
+  [
+   "CL:0000115",
+   "endothelial cell",
+   1
+  ],
+  [
+   "CL:0008019",
+   "mesenchymal cell",
+   1
+  ],
+  [
+   "CL:0000771",
+   "eosinophil",
+   1
+  ],
+  [
+   "CL:0000767",
+   "basophil",
+   1
+  ],
+  [
+   "CL:0000097",
+   "mast cell",
+   1
+  ]
+ ],
+ "UBERON": [
+  [
+   "UBERON:0002048",
+   "lung",
+   1
+  ],
+  [
+   "UBERON:0002299",
+   "alveolus of lung",
+   1
+  ],
+  [
+   "UBERON:0002185",
+   "bronchus",
+   1
+  ],
+  [
+   "UBERON:0003126",
+   "trachea",
+   1
+  ],
+  [
+   "UBERON:0001004",
+   "respiratory system",
+   1
+  ],
+  [
+   "UBERON:0001155",
+   "colon",
+   1
+  ],
+  [
+   "UBERON:0002108",
+   "small intestine",
+   1
+  ],
+  [
+   "UBERON:0002116",
+   "ileum",
+   1
+  ],
+  [
+   "UBERON:0001153",
+   "caecum",
+   1
+  ],
+  [
+   "UBERON:0002114",
+   "duodenum",
+   1
+  ],
+  [
+   "UBERON:0001242",
+   "intestinal mucosa",
+   1
+  ],
+  [
+   "UBERON:0000178",
+   "blood",
+   1
+  ],
+  [
+   "UBERON:0002371",
+   "bone marrow",
+   1
+  ],
+  [
+   "UBERON:0002106",
+   "spleen",
+   1
+  ],
+  [
+   "UBERON:0002370",
+   "thymus",
+   1
+  ],
+  [
+   "UBERON:0000029",
+   "lymph node",
+   1
+  ],
+  [
+   "UBERON:0002509",
+   "mesenteric lymph node",
+   1
+  ],
+  [
+   "UBERON:0001264",
+   "pancreas",
+   1
+  ],
+  [
+   "UBERON:0002107",
+   "liver",
+   1
+  ]
+ ],
+ "NCBITaxon": [
+  [
+   "NCBITaxon:9606",
+   "Homo sapiens",
+   1
+  ],
+  [
+   "NCBITaxon:10090",
+   "Mus musculus",
+   1
+  ],
+  [
+   "NCBITaxon:746128",
+   "Aspergillus fumigatus",
+   1
+  ],
+  [
+   "NCBITaxon:5476",
+   "Candida albicans",
+   1
+  ],
+  [
+   "NCBITaxon:5207",
+   "Cryptococcus neoformans",
+   1
+  ],
+  [
+   "NCBITaxon:1496",
+   "Clostridioides difficile",
+   1
+  ],
+  [
+   "NCBITaxon:28901",
+   "Salmonella enterica",
+   1
+  ],
+  [
+   "NCBITaxon:1280",
+   "Staphylococcus aureus",
+   1
+  ],
+  [
+   "NCBITaxon:1313",
+   "Streptococcus pneumoniae",
+   1
+  ],
+  [
+   "NCBITaxon:287",
+   "Pseudomonas aeruginosa",
+   1
+  ],
+  [
+   "NCBITaxon:562",
+   "Escherichia coli",
+   1
+  ],
+  [
+   "NCBITaxon:1639",
+   "Listeria monocytogenes",
+   1
+  ],
+  [
+   "NCBITaxon:1773",
+   "Mycobacterium tuberculosis",
+   1
+  ],
+  [
+   "NCBITaxon:11320",
+   "Influenza A virus",
+   1
+  ],
+  [
+   "NCBITaxon:2697049",
+   "Severe acute respiratory syndrome coronavirus 2",
+   1
+  ]
+ ],
+ "MONDO": [
+  [
+   "MONDO:0005657",
+   "aspergillosis",
+   1
+  ],
+  [
+   "MONDO:0000240",
+   "invasive aspergillosis",
+   0
+  ],
+  [
+   "MONDO:0005249",
+   "pneumonia",
+   1
+  ],
+  [
+   "MONDO:0005265",
+   "inflammatory bowel disease",
+   1
+  ],
+  [
+   "MONDO:0006047",
+   "pancreatic adenocarcinoma",
+   1
+  ],
+  [
+   "MONDO:0005061",
+   "lung adenocarcinoma",
+   1
+  ],
+  [
+   "MONDO:0005812",
+   "influenza",
+   1
+  ]
+ ],
+ "CHEBI": [
+  [
+   "CHEBI:17968",
+   "butyrate",
+   1
+  ],
+  [
+   "CHEBI:26666",
+   "short-chain fatty acid",
+   1
+  ],
+  [
+   "CHEBI:16412",
+   "lipopolysaccharide",
+   1
+  ],
+  [
+   "CHEBI:41879",
+   "dexamethasone",
+   1
+  ],
+  [
+   "CHEBI:175901",
+   "gemcitabine",
+   1
+  ],
+  [
+   "CHEBI:4027",
+   "cyclophosphamide",
+   1
+  ],
+  [
+   "CHEBI:28001",
+   "vancomycin",
+   1
+  ],
+  [
+   "CHEBI:2682",
+   "amphotericin B",
+   1
+  ],
+  [
+   "CHEBI:10023",
+   "voriconazole",
+   1
+  ],
+  [
+   "CHEBI:28262",
+   "dimethyl sulfoxide",
+   1
+  ],
+  [
+   "CHEBI:15422",
+   "ATP",
+   1
+  ],
+  [
+   "CHEBI:84491",
+   "poly(I:C)",
+   1
+  ]
+ ],
+ "EFO": [
+  [
+   "EFO:0008637",
+   "Illumina NovaSeq 6000",
+   1
+  ],
+  [
+   "EFO:0009173",
+   "Illumina NextSeq 500",
+   1
+  ],
+  [
+   "EFO:0010963",
+   "Illumina NextSeq 2000",
+   1
+  ],
+  [
+   "EFO:0004205",
+   "Illumina MiSeq",
+   1
+  ],
+  [
+   "EFO:0008563",
+   "Illumina HiSeq 4000",
+   1
+  ],
+  [
+   "EFO:0003738",
+   "RNA-seq of coding RNA",
+   1
+  ],
+  [
+   "EFO:0007045",
+   "ATAC-seq",
+   1
+  ]
+ ],
+ "OBI": [
+  [
+   "OBI:0001271",
+   "RNA-seq assay",
+   1
+  ],
+  [
+   "OBI:0002631",
+   "single-cell RNA sequencing assay",
+   0
+  ],
+  [
+   "OBI:0000470",
+   "mass spectrometry assay",
+   1
+  ],
+  [
+   "OBI:0000916",
+   "flow cytometry assay",
+   1
+  ],
+  [
+   "OBI:0000185",
+   "imaging assay",
+   1
+  ],
+  [
+   "OBI:0666667",
+   "nucleic acid extraction",
+   1
+  ]
+ ],
+ "PR": [
+  [
+   "PR:P16070-10",
+   "CD44 antigen isoform h10 (human)",
+   0
+  ],
+  [
+   "PR:Q9I8D8",
+   "CD40 ligand (chicken)",
+   0
+  ],
+  [
+   "PR:P27548",
+   "CD40 ligand (mouse)",
+   0
+  ],
+  [
+   "PR:P29965",
+   "CD40 ligand (human)",
+   0
+  ],
+  [
+   "PR:F1NXT4",
+   "uncharacterized protein, CD8A translation product (chicken)",
+   0
+  ],
+  [
+   "PR:000001084",
+   "T-cell surface glycoprotein CD8 alpha chain",
+   0
+  ],
+  [
+   "PR:000025404",
+   "T-cell surface glycoprotein CD8 alpha chain isoform 2",
+   0
+  ],
+  [
+   "PR:P01731",
+   "T-cell surface glycoprotein CD8 alpha chain (mouse)",
+   0
+  ],
+  [
+   "PR:000001013",
+   "integrin alpha-X",
+   0
+  ],
+  [
+   "PR:P20702",
+   "integrin alpha-X (human)",
+   0
+  ],
+  [
+   "PR:Q9QXH4",
+   "integrin alpha-X (mouse)",
+   0
+  ],
+  [
+   "PR:000001014",
+   "receptor-type tyrosine-protein phosphatase C isoform CD45RABC",
+   0
+  ],
+  [
+   "PR:000001015",
+   "receptor-type tyrosine-protein phosphatase C isoform CD45RA",
+   0
+  ],
+  [
+   "PR:000025802",
+   "receptor-type tyrosine-protein phosphatase C isoform CD45RAB",
+   0
+  ],
+  [
+   "PR:000025803",
+   "receptor-type tyrosine-protein phosphatase C isoform CD45RAC",
+   0
+  ],
+  [
+   "PR:000005171",
+   "DNA-directed RNA polymerase I subunit RPA34",
+   0
+  ],
+  [
+   "PR:O15446",
+   "DNA-directed RNA polymerase I subunit RPA34 (human)",
+   0
+  ],
+  [
+   "PR:000001020",
+   "CD3 epsilon",
+   0
+  ],
+  [
+   "PR:P07766",
+   "T-cell surface glycoprotein CD3 epsilon chain (human)",
+   0
+  ],
+  [
+   "PR:P25918",
+   "B-lymphocyte antigen CD19 (mouse)",
+   0
+  ],
+  [
+   "PR:000001002",
+   "CD19 molecule",
+   0
+  ],
+  [
+   "PR:P15391",
+   "B-lymphocyte antigen CD19 (human)",
+   0
+  ],
+  [
+   "PR:000018300",
+   "CD19 molecule, signal peptide removed form",
+   0
+  ],
+  [
+   "PR:000009994",
+   "lymphocyte antigen 6 complex locus protein G6f",
+   0
+  ],
+  [
+   "PR:Q5SQ64",
+   "lymphocyte antigen 6 complex locus protein G6f (human)",
+   0
+  ],
+  [
+   "PR:000002978",
+   "lymphocyte antigen 6G",
+   0
+  ],
+  [
+   "PR:000009990",
+   "lymphocyte antigen 6 complex locus protein G5b",
+   0
+  ],
+  [
+   "PR:000002980",
+   "lymphocyte antigen 6C2",
+   0
+  ],
+  [
+   "PR:P0CW03",
+   "lymphocyte antigen 6C2 (mouse)",
+   0
+  ],
+  [
+   "PR:000029071",
+   "lymphocyte antigen 6C1",
+   0
+  ],
+  [
+   "PR:000018775",
+   "lymphocyte antigen 6C2, signal peptide removed form",
+   0
+  ],
+  [
+   "PR:000001927",
+   "sialic acid-binding Ig-like lectin 5",
+   0
+  ],
+  [
+   "PR:Q920G3",
+   "sialic acid-binding Ig-like lectin 5 (mouse)",
+   0
+  ],
+  [
+   "PR:F4JCY2",
+   "hyperosmolality-gated Ca2+ permeable channel 2.5 (Arabidopsis thaliana)",
+   0
+  ],
+  [
+   "PR:000008613",
+   "MHC class II histocompatibility antigen, DO beta chain",
+   0
+  ],
+  [
+   "PR:000030229",
+   "MHC class II histocompatibility antigen, DM alpha chain",
+   0
+  ],
+  [
+   "PR:000032795",
+   "MHC class II histocompatibility antigen, DM beta chain",
+   0
+  ],
+  [
+   "PR:P79621-2",
+   "MHC class II transactivator isoform m2 (mouse)",
+   0
+  ],
+  [
+   "PR:000001465",
+   "high affinity immunoglobulin gamma Fc receptor I",
+   0
+  ],
+  [
+   "PR:P12314",
+   "high affinity immunoglobulin gamma Fc receptor I (human)",
+   0
+  ],
+  [
+   "PR:P26151",
+   "high affinity immunoglobulin gamma Fc receptor I (mouse)",
+   0
+  ],
+  [
+   "PR:000001012",
+   "integrin alpha-M",
+   0
+  ],
+  [
+   "PR:P05555",
+   "integrin alpha-M (mouse)",
+   0
+  ],
+  [
+   "PR:P11215",
+   "integrin alpha-M (human)",
+   0
+  ],
+  [
+   "PR:000001247",
+   "substance-P receptor",
+   0
+  ],
+  [
+   "PR:P25103",
+   "substance-P receptor (human)",
+   0
+  ],
+  [
+   "PR:Q15270",
+   "NK1 transcription factor-related protein 1 (human)",
+   0
+  ],
+  [
+   "PR:G3UXB3",
+   "NK1 transcription factor-related protein 1 (mouse)",
+   0
+  ]
+ ],
+ "MmusDv": [
+  [
+   "MmusDv:0000092",
+   "postnatal stage",
+   1
+  ],
+  [
+   "MmusDv:0000002",
+   "embryonic stage",
+   1
+  ]
+ ]
+}
