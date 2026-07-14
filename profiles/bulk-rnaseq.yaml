@@ -1,0 +1,47 @@
+# =============================================================================
+# profiles/bulk-rnaseq.yaml — assay profile (OVERLAY on core_model.yaml)
+# Covers: bulk RNA-seq, and dual/triple RNA-seq (host + pathogen(s)).
+# =============================================================================
+profile: bulk-RNA-seq
+extends: core_model.yaml
+extractor: extractors/fastq_bulk.py
+version: "0.1.0-draft"
+
+deposition_targets: [ArrayExpress, GEO, ENA, Zenodo]
+
+requires:
+  - sample.tissue
+  - library.library_selection
+  - sample.factors            # bulk without declared factors is uninterpretable
+
+defaults:
+  library_strategy: RNA-Seq
+  library_selection: Oligo-dT       # or "rRNA depletion" for dual/triple RNA-seq
+  library_source: transcriptomic
+  material_type: total RNA
+  technology_type: "OBI:0001271"    # RNA-seq assay
+
+fields:
+  library:
+    strandedness:      {source: auto, category: technical, type: 'enum[unstranded, forward, reverse]', tier: silver, why: "Inferable from the data (infer_experiment.py). Getting it wrong halves your counts."}
+    rrna_depletion:    {source: human, category: technical, type: 'enum["none","Ribo-Zero","RiboCop","polyA selection"]', tier: silver, why: "Dual/triple RNA-seq REQUIRES depletion, not polyA — bacteria have no polyA tails. This field catches a fatal design error."}
+    spike_ins:         {source: human, category: technical, type: string, required: false, tier: silver, why: "ERCC etc. Changes normalisation."}
+
+  # --- dual / triple RNA-seq: the A03 case, generalised ---------------------
+  multiorganism:
+    combined_reference: {source: project, category: technical, type: string, required: false, tier: silver, why: "The concatenated host+pathogen genome. Nobody can reproduce your counts without the exact build."}
+    read_partitioning:  {source: human, category: technical, type: 'enum["not applicable","competitive mapping","sequential mapping","in-silico depletion"]', tier: silver, why: "HOW host and pathogen reads were separated. Different methods give different answers. This is the core methodological choice of dual RNA-seq and it is almost never reported."}
+    per_organism_counts: {source: auto, category: technical, type: bool, tier: silver, why: "Whether a per-organism count matrix exists. Extracted."}
+    pathogen_read_fraction: {source: auto, category: biological, type: number, required: false, tier: silver, why: "Extracted. Also a QC signal: a sample with ~0 pathogen reads is not infected, whatever the label says."}
+
+  analysis:
+    aligner:           {source: auto, category: technical, type: string, tier: silver, why: "Extracted from logs."}
+    counting_method:   {source: auto, category: technical, type: string, tier: silver, why: "featureCounts / salmon / STAR --quantMode. Extracted."}
+    de_method:         {source: human, category: technical, type: 'enum["none","DESeq2","edgeR","limma-voom"]', required: false, tier: silver, why: "Which model produced the reported DE genes."}
+
+exports:
+  - {name: arrayexpress, format: "SDRF+IDF (MAGE-TAB)", map: export/arrayexpress.map.yaml}
+  - {name: geo,          format: "GEO metadata workbook", map: export/geo.map.yaml}
+  - {name: ena,          format: "ENA sample+run XML",    map: export/ena.map.yaml}
+  - {name: pipeline,     format: "nf-core/rnaseq samplesheet (CSV)", map: export/nfcore_rnaseq.map.yaml}
+  - {name: catalogue,    format: "DataCite / JSON-LD record", map: export/datacite.map.yaml}

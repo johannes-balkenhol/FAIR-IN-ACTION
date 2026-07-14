@@ -1,0 +1,61 @@
+# =============================================================================
+# profiles/proteomics-ms.yaml — assay profile (OVERLAY on core_model.yaml)
+# Covers: DDA and DIA LC-MS/MS. This is the PlateletWeb / Chen 2024 lineage.
+# Repository is PRIDE, NOT ArrayExpress — and PRIDE wants raw vendor files.
+# =============================================================================
+profile: proteomics-MS
+extends: core_model.yaml
+extractor: extractors/ms_raw.py
+version: "0.1.0-draft"
+
+deposition_targets: [PRIDE, Zenodo]     # NOT ArrayExpress. Different world.
+
+requires:
+  - sample.tissue
+  - sample.factors
+
+defaults:
+  material_type: protein
+  technology_type: "OBI:0000470"        # mass spectrometry assay
+  library_strategy: not applicable       # MS has no "library" — see note below
+
+# NOTE ON NESTING: MS breaks the sample->extract->library->assay chain.
+# There is no library. The chain is sample -> extract (protein digest) ->
+# ms_run -> file. Profiles are ALLOWED to redefine the chain; core provides
+# the default, not a law.
+chain: [sample, extract, ms_run, file]
+
+fields:
+  extract:
+    digestion_enzyme:   {source: project, category: technical, type: 'enum[trypsin, "Lys-C", "trypsin/Lys-C", chymotrypsin, "Glu-C"]', default: trypsin, tier: silver, why: "Determines the peptide search space. Wrong enzyme = wrong identifications."}
+    enrichment:         {source: human, category: technical, type: 'enum["none","phospho (TiO2/IMAC)","glyco","acetyl"]', default: none, tier: silver, why: "Phosphoproteome vs proteome is invisible in the raw file name but changes everything downstream."}
+    labelling:          {source: project, category: technical, type: 'enum["label-free","TMT-6","TMT-10","TMT-16","TMT-18","SILAC","iTRAQ"]', default: "label-free", tier: bronze, why: "Determines the quantification model AND whether samples are pooled per run."}
+    fractionation:      {source: human, category: technical, type: string, required: false, tier: silver, why: "High-pH RP fractions. If present, n_files > n_samples."}
+
+  ms_run:
+    ms_run_id:          {source: auto, category: technical, type: string, tier: bronze, why: "Extracted from the raw file."}
+    acquisition_mode:   {source: project, category: technical, type: 'enum[DDA, DIA, PRM, SRM]', tier: bronze, why: "DIA and DDA need different search engines. Chen 2024 is DIA."}
+    instrument:         {source: auto, category: technical, ontology: MS, tier: bronze, why: "Extracted from the raw file header. Use the PSI-MS ontology term, not 'Orbitrap'."}
+    lc_gradient_min:    {source: auto, category: technical, type: number, tier: silver, why: "Extracted."}
+    isolation_window:   {source: auto, category: technical, type: number, required: false, tier: silver, why: "DIA window width. Extracted."}
+    ms1_resolution:     {source: auto, category: technical, type: int, tier: silver, why: "Extracted."}
+
+  search:
+    search_engine:      {source: human, category: technical, type: 'enum["MaxQuant","DIA-NN","Spectronaut","FragPipe","Proteome Discoverer","Skyline"]', tier: bronze, why: "Different engines give different protein counts from identical raw data. This is the single biggest source of irreproducibility in proteomics."}
+    sequence_database:  {source: human, category: technical, type: string, tier: bronze, why: "UniProt proteome ID + release date. 'UniProt human' is not sufficient — the database changes monthly."}
+    spectral_library:   {source: human, category: technical, type: string, required: false, tier: silver, why: "DIA: library-based or library-free (directDIA). Determines what you could have detected at all."}
+    fdr_threshold:      {source: human, category: technical, type: number, default: 0.01, tier: silver, why: "Protein and peptide FDR. A '6,519 proteins' claim is meaningless without it."}
+    contaminant_db:     {source: human, category: technical, type: string, required: false, tier: silver, why: "Whether contaminants were removed. Keratin is not a finding."}
+    n_proteins:         {source: auto, category: technical, type: int, tier: bronze, why: "Extracted from the report. THE headline number — so it must be traceable to its FDR and database."}
+    n_peptides:         {source: auto, category: technical, type: int, tier: silver, why: "Extracted."}
+
+  quant:
+    normalisation:      {source: human, category: technical, type: 'enum["none","median","quantile","MaxLFQ","VSN"]', tier: silver, why: "Extracted values are not comparable across normalisation methods."}
+    imputation:         {source: human, category: technical, type: 'enum["none","min/2","kNN","MissForest","perseus-normal"]', tier: silver, why: "Imputation invents data. Undeclared imputation is the most dangerous omission in a proteomics table."}
+    batch_correction:   {source: human, category: technical, type: 'enum["none","ComBat","limma removeBatchEffect","median-centering"]', tier: silver, why: "Chen 2024's open step. Declare it or the integration is not reproducible."}
+
+exports:
+  - {name: pride,     format: "PRIDE SDRF-Proteomics + submission.px", map: export/pride.map.yaml}
+  - {name: sdrf_prot, format: "SDRF-Proteomics (TSV)", map: export/sdrf_proteomics.map.yaml}
+  - {name: pipeline,  format: "DIA-NN / FragPipe config", map: export/dia_config.map.yaml}
+  - {name: catalogue, format: "DataCite / JSON-LD record", map: export/datacite.map.yaml}

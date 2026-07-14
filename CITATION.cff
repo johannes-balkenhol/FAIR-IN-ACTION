@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this toolkit, please cite it."
+title: "FAIR in action — a metadata model and toolkit for infection-omics projects"
+abstract: >-
+  A machine-readable core metadata model with assay profiles (scRNA-seq, bulk/dual
+  RNA-seq, LC-MS/MS proteomics, flow cytometry), from which a metadata-capture app,
+  gap-sheets, validators, repository exporters and a bronze/silver/gold FAIR audit
+  are generated. Every field is tagged by who can supply it — machine, project, or
+  human — so that researchers are asked only for what nobody else can know.
+type: software
+authors:
+  - family-names: "<FILL IN>"
+    given-names: "<FILL IN>"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+    affiliation: "Core Unit Research Data Management (cRDM), Universität Würzburg"
+license: MIT
+repository-code: "<FILL IN: GitLab/GitHub URL>"
+doi: "<FILL IN after first Zenodo release>"
+version: 0.1.0
+date-released: "2026-07-14"
+keywords: [FAIR, research data management, metadata model, ontology, ArrayExpress,
+           PRIDE, MIFlowCyt, single-cell, infection biology, DECIDE, SFB 1583]
+references:
+  - type: generic
+    title: "DECIDE RDM — Use cases & subprojects"
+    url: "https://www.decide.biozentrum.uni-wuerzburg.de/use_cases.html"

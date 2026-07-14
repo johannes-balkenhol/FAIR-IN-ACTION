@@ -1,0 +1,59 @@
+# =============================================================================
+# profiles/flow-cytometry.yaml — assay profile (OVERLAY on core_model.yaml)
+# Covers: conventional flow, spectral flow, CyTOF, FACS sorting.
+# Standard is MIFlowCyt. Repository is FlowRepository. This is the FlowSep lineage.
+# =============================================================================
+profile: flow-cytometry
+extends: core_model.yaml
+extractor: extractors/fcs.py         # FCS keywords are a goldmine: nearly all technical metadata is IN the file
+version: "0.1.0-draft"
+
+deposition_targets: [FlowRepository, Zenodo]
+standard: MIFlowCyt
+
+requires:
+  - sample.tissue
+  - sample.cell_type
+  - panel.markers
+
+chain: [sample, extract, fcs_run, file]
+
+fields:
+  extract:
+    stain_protocol:   {source: project, category: technical, type: text, tier: silver, why: "Referenced once per project, not per sample."}
+    viability_dye:    {source: human, category: technical, type: string, required: false, tier: silver, why: "Dead cells bind antibodies non-specifically. Undeclared = uninterpretable."}
+    fc_block:         {source: human, category: technical, type: bool, tier: silver, why: "Fc receptor blocking. Its absence explains a lot of 'novel' myeloid populations."}
+
+  # --- THE PANEL: the heart of flow metadata, and where ontologies pay off ---
+  panel:
+    panel_id:      {source: project, category: technical, type: string, tier: bronze, why: "Panels are reused across projects. Name them once."}
+    markers:
+      source: human
+      category: biological
+      type: 'list[marker]'
+      tier: bronze
+      why: "MIFlowCyt requires the full panel. This is also what makes flow data searchable — 'CD11c' as a PR term links to every other study using it."
+      item_schema:
+        antigen:      {ontology: PR, required: true, why: "Protein Ontology term. 'CD11c' free-text does not join to anything; PR:000001313 does."}
+        clone:        {type: string, required: true, why: "Different clones of the same antibody give different results. This is the field everyone omits."}
+        fluorochrome: {type: string, required: true}
+        detector:     {source: auto, type: string, why: "Read from the FCS $PnN/$PnS keywords."}
+        vendor_cat:   {type: string, required: false, why: "Vendor + catalogue number = the only truly unambiguous antibody identifier (RRID better still)."}
+        rrid:         {type: string, required: false, tier: gold, why: "GOLD. RRID:AB_xxxxx resolves the antibody uniquely, forever."}
+
+  fcs_run:
+    cytometer:        {source: auto, category: technical, ontology: EFO, tier: bronze, why: "In the FCS $CYT keyword. Never ask."}
+    acquisition_date: {source: auto, category: provenance, type: date, tier: bronze, why: "In the FCS $DATE keyword. Batch effects are dated."}
+    operator:         {source: auto, category: provenance, type: string, tier: silver, why: "FCS $OP keyword. Free provenance."}
+    n_events:         {source: auto, category: technical, type: int, tier: bronze, why: "Extracted."}
+    compensation:     {source: auto, category: technical, type: 'enum["none","matrix in FCS","external matrix","spectral unmixing"]', tier: silver, why: "Detectable from the FCS $SPILLOVER keyword."}
+
+  analysis:
+    gating_strategy:  {source: human, category: technical, type: text, tier: bronze, why: "MIFlowCyt REQUIRES this. Without the gating hierarchy a flow figure cannot be evaluated at all."}
+    gating_file:      {source: auto, category: technical, type: string, required: false, tier: gold, why: "GOLD. A machine-readable Gating-ML / wsp file makes the analysis reproducible, not just describable."}
+    sorted_populations: {source: human, category: biological, ontology: CL, required: false, tier: silver, why: "If FACS-sorted, WHAT was sorted — this links the flow run to the downstream scRNA-seq sample."}
+
+exports:
+  - {name: flowrepository, format: "MIFlowCyt submission (XML)", map: export/miflowcyt.map.yaml}
+  - {name: panel_sheet,    format: "Panel table (CSV) for methods section", map: export/panel.map.yaml}
+  - {name: catalogue,      format: "DataCite / JSON-LD record", map: export/datacite.map.yaml}

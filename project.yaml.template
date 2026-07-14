@@ -1,0 +1,77 @@
+# =============================================================================
+# project.yaml  —  the ONLY file where project specifics are allowed.
+# -----------------------------------------------------------------------------
+# Copy into your project root. ~20 lines. Written once, at project start.
+# Everything else (gap-sheet, validator, exporter, audit, README) is GENERATED
+# from core_model.yaml + this file. If you find yourself editing a script to
+# make it fit your project, the model is under-specified — tell the RDM team.
+# =============================================================================
+
+project_id: MYPROJ                      # short, stable, appears in every filename
+title: >
+  Full human-readable study title, as it will appear in the public record.
+description: >
+  One paragraph. This becomes the abstract of the repository submission.
+
+consortium: CRCxxxx
+funder_grant_id: DFG-xxx-xxx
+
+pis:
+  - {name: "Surname, Given", orcid: "0000-0000-0000-0000", email: ""}
+contributors:
+  - {name: "Surname, Given", orcid: "0000-0000-0000-0000", role: "data generation"}
+data_steward: {name: "", orcid: "", email: ""}   # the one person who answers metadata questions
+
+licence: CC-BY-4.0                      # data licence. Code licence goes in LICENSE.
+sensitivity: open                       # open | restricted | pseudonymised | identifying
+embargo_until:                          # leave blank if none
+
+# --- organisms -------------------------------------------------------------
+# List EVERY organism in the samples, each with its role.
+# Host-pathogen / dual / triple designs list several. This is not optional.
+organisms:
+  - {taxon: "NCBITaxon:10090", label: "Mus musculus",         role: host}
+  - {taxon: "NCBITaxon:746128", label: "Aspergillus fumigatus", role: pathogen, strain: ""}
+
+# --- assays ----------------------------------------------------------------
+# Determines which extractor runs, which fields become required, and which
+# repository you must satisfy. Getting this wrong invalidates the schema.
+assays:
+  - type: scRNA-seq                     # scRNA-seq | bulk-RNA-seq | ATAC | imaging | MS-DIA | flow
+    platform: "10x Genomics 3' v3"
+    instrument: "Illumina NovaSeq 6000"
+    multiplexed: true                   # true => n_libraries < n_samples. Say so NOW.
+
+# --- project-level constants (inherited by every sample; never re-asked) ----
+defaults:
+  material_type: total RNA
+  library_strategy: RNA-Seq
+  library_selection: Oligo-dT
+  library_source: transcriptomic single cell
+  disease:                              # MONDO curie, or blank
+  cell_line:                            # blank if primary material
+
+# --- experimental factors --------------------------------------------------
+# The variables you are comparing. Declaring them here makes them REQUIRED
+# in the gap-sheet, so they cannot be silently omitted.
+factors:
+  - {name: infection,  ontology: NCBITaxon}
+  - {name: timepoint,  ontology: EFO, unit: hour}
+  - {name: treatment,  ontology: CHEBI}
+
+# --- ontology extensions ---------------------------------------------------
+# Domain-specific vocabularies beyond the core. ADD only; never override core.
+ontology_extensions: []
+  # - {prefix: FBbt, name: Drosophila anatomy, use: tissue}
+
+# --- deposition ------------------------------------------------------------
+# Decided at project START, not at paper submission.
+deposition_target:
+  - ArrayExpress                        # data
+  - Zenodo                              # code (via GitHub release — near-free, always do it)
+
+identifiers:
+  code_repo_url: "https://github.com/<org>/<repo>"
+  code_doi:                             # auto-filled by Zenodo on first release
+  data_accession:                       # E-MTAB-xxxxx, filled after curator loop
+  paper_doi:                            # filled at publication — then CROSS-LINK all three

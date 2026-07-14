@@ -1,0 +1,62 @@
+# =============================================================================
+# profiles/scrnaseq.yaml — assay profile (OVERLAY on core_model.yaml)
+# -----------------------------------------------------------------------------
+# A profile declares only what is DIFFERENT. It never repeats core fields.
+# Z02 relevance: this profile targets atlas integration, so cell-level metadata
+# (obs) is a first-class output, not an afterthought.
+# =============================================================================
+profile: scRNA-seq
+extends: core_model.yaml
+extractor: extractors/fastq_10x.py
+version: "0.1.0-draft"
+
+deposition_targets: [ArrayExpress, GEO, Zenodo]
+atlas_targets: [CELLxGENE, HCA, "Z02 Infection Atlas"]
+
+# --- core fields this assay PROMOTES to required ----------------------------
+requires:
+  - sample.cell_type          # CL — atlas integration is impossible without it
+  - sample.tissue             # UBERON
+  - library.multiplex_tag     # if multiplexed
+  - library.library_selection
+
+defaults:
+  library_strategy: RNA-Seq
+  library_selection: Oligo-dT
+  library_source: transcriptomic single cell
+  material_type: cell
+  technology_type: "OBI:0002631"   # single-cell RNA sequencing assay
+
+# --- fields added by this assay ---------------------------------------------
+fields:
+  library:
+    chemistry:        {source: project, category: technical, type: 'enum["10x 3'' v2","10x 3'' v3","10x 5'' v2","Smart-seq2","Drop-seq","Parse","BD Rhapsody"]', tier: silver, why: "Determines read structure and barcode whitelist. Wrong value = wrong alignment."}
+    input_molecule:   {source: project, category: technical, type: 'enum["cell barcode","polyA RNA"]', default: "cell barcode", tier: silver, why: "ArrayExpress single-cell extension field."}
+    end_bias:         {source: project, category: technical, type: 'enum["3 prime tag","5 prime tag","none"]', default: "3 prime tag", tier: silver, why: "ArrayExpress single-cell extension field."}
+    barcode_read:     {source: auto, category: technical, type: string, tier: silver, why: "Which read carries the cell barcode. Read from the FASTQ structure."}
+    umi_length:       {source: auto, category: technical, type: int, tier: silver, why: "Extracted."}
+    multiplexing_method: {source: human, category: technical, type: 'enum["none","CMO","hashtag (HTO)","genetic (souporcell)","index hopping control"]', tier: bronze, why: "If multiplexed, n_libraries < n_samples. THE most common submission error. Declare it before you sequence."}
+
+  # --- CELL-LEVEL METADATA (obs) — the atlas payload ------------------------
+  # This is what Z02 actually consumes. It does not exist in the SDRF at all,
+  # which is why atlas integration is a separate export, not a by-product.
+  cell:
+    n_cells:            {source: auto, category: technical, type: int, tier: bronze, why: "Post-QC cell count. Extracted from the h5ad."}
+    n_genes:            {source: auto, category: technical, type: int, tier: bronze, why: "Extracted."}
+    qc_thresholds:      {source: human, category: technical, type: text, tier: silver, why: "min_genes / max_pct_mito / doublet method. Without these, your cell count is unreproducible."}
+    doublet_method:     {source: human, category: technical, type: 'enum["none","scrublet","DoubletFinder","souporcell","hashing"]', tier: silver, why: "Atlases reject datasets with unstated doublet handling."}
+    cell_type_key:      {source: human, category: biological, type: string, default: "cell_type", tier: silver, why: "Which obs column holds the annotation. Atlas ingestion needs the column NAME, not just the values."}
+    cell_type_ontology: {source: human, category: biological, ontology: CL, tier: gold, why: "GOLD. Free-text 'alveolar macrophage' cannot be queried across studies. CL:0000583 can. This single field is most of the atlas value."}
+    batch_key:          {source: human, category: technical, type: string, tier: silver, why: "Which obs column defines the batch. Integration methods need this explicitly."}
+    infection_status_key: {source: human, category: biological, type: string, required: false, tier: silver, why: "Host-pathogen scRNA-seq: which cells carry pathogen reads. The decision-node analysis depends on it."}
+    normalisation:      {source: human, category: technical, type: 'enum["none (raw counts)","CPM","log1p CP10K","SCTransform","pearson residuals"]', tier: silver, why: "Atlases require RAW counts in .X or .raw. Stating this prevents a silent corruption."}
+    reference_genome:   {source: project, category: technical, type: string, tier: bronze, why: "GRCh38-2020-A etc. Different references = non-comparable gene names."}
+    pathogen_reference: {source: project, category: technical, type: string, required: false, tier: silver, why: "Dual/triple RNA-seq: the pathogen genome added to the host reference. Without it nobody can rebuild your count matrix."}
+
+exports:
+  - {name: arrayexpress, format: "SDRF+IDF (MAGE-TAB)", map: export/arrayexpress.map.yaml}
+  - {name: geo,          format: "GEO metadata workbook", map: export/geo.map.yaml}
+  - {name: cellxgene,    format: "h5ad obs schema (CSV)", map: export/cellxgene.map.yaml}
+  - {name: atlas_z02,    format: "Infection Atlas ingest config (YAML)", map: export/atlas_z02.map.yaml}
+  - {name: pipeline,     format: "nf-core/scrnaseq samplesheet (CSV)", map: export/nfcore_scrnaseq.map.yaml}
+  - {name: catalogue,    format: "DataCite / JSON-LD record", map: export/datacite.map.yaml}

@@ -1,0 +1,3 @@
+# This repository is the toolkit, not a project.
+# audit.py must not try to score the ruler against its own rules.
+is_toolkit: true
