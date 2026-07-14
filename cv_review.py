@@ -17,8 +17,28 @@ by an atlas, by whoever reuses the data in five years.
 
 So: look at these before shipping them.
 """
-import argparse, json, pathlib, sys
-from build_cv_cache import SEEDS
+import argparse, json, pathlib, sys, urllib.parse, urllib.request
+from build_cv_cache import SEEDS, OLS
+
+
+def candidates(onto, q, rows=6):
+    """What COULD this seed have meant? Show the options; let a human choose.
+
+    This exists because guessing the right label is exactly how CD4 became CD44.
+    The tool proposes; the curator disposes. That is the only safe division of
+    labour for a controlled vocabulary."""
+    url = f"{OLS}/select?q={urllib.parse.quote(q)}&ontology={onto.lower()}&rows={rows}"
+    try:
+        with urllib.request.urlopen(url, timeout=12) as r:
+            j = json.load(r)
+    except Exception as e:
+        return [("(OLS unreachable)", str(e))]
+    out = []
+    for d in (j.get("response") or {}).get("docs") or []:
+        cid, lab = d.get("obo_id") or d.get("short_form"), d.get("label")
+        if cid and lab and cid.split(":")[0].upper() == onto.upper():
+            out.append((cid, lab))
+    return out
 
 ROOT = pathlib.Path(__file__).resolve().parent
 CACHE = ROOT / "cv_cache.json"
@@ -28,6 +48,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--prune", action="store_true",
                     help="keep only exact label matches; delete everything else")
+    ap.add_argument("--suggest", action="store_true",
+                    help="for every failed seed, show the candidate terms so YOU can pick the right label")
     a = ap.parse_args()
 
     if not CACHE.exists():
@@ -84,6 +106,27 @@ def main():
     print("  nomenclature. Either find the right labels, or drop PR and curate the")
     print("  antibody panel vocabulary by hand — which for ~30 markers is an hour's")
     print("  work and gives you something you can actually defend.")
+
+    if a.suggest:
+        print("\n" + "═" * 100)
+        print("  CANDIDATES for every seed that did not match exactly.")
+        print("  Pick the right one and fix the label in build_cv_cache.py SEEDS.")
+        print("  Do NOT let the script pick for you — that is how CD4 became CD44.")
+        print("═" * 100)
+        for onto, seed, _ in dropped:
+            print(f"\n  {onto}  seed: \033[33m{seed!r}\033[0m")
+            cands = candidates(onto, seed)
+            if not cands:
+                print(f"      (no candidates at all — {onto} may simply not contain this concept.")
+                print(f"       If so it belongs in sample.characteristics[], not in a term field.)")
+                continue
+            for cid, lab in cands:
+                mark = "\033[32m→\033[0m" if lab.lower().startswith(seed.lower().split()[0]) else " "
+                print(f"    {mark} {cid:22s} {lab}")
+        print("\n  Update SEEDS, re-run build_cv_cache.py, then cv_review.py again.")
+        print("  Aim for zero ✗. Anything that cannot reach zero does not belong in an")
+        print("  ontology field — put it in characteristics[] and be honest about it.\n")
+        return
 
     if a.prune:
         CACHE.write_text(json.dumps(kept, indent=1, ensure_ascii=False))

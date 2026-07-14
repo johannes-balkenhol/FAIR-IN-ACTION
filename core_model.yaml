@@ -42,7 +42,7 @@ ontologies:
   CHEBI:     {name: Chemical Entities of Biological Interest, use: compound}
   MmusDv:    {name: Mouse Developmental Stages,   use: developmental stage (mouse)}
   HsapDv:    {name: Human Developmental Stages,   use: developmental stage (human)}
-  PR:        {name: Protein Ontology,             use: antibody antigen}
+  MARKER:    {name: Curated flow marker vocabulary, use: "antibody antigen — NOT an ontology. PR was tried and rejected: it names protein entities, not antibody targets, and returns CD44 for CD4. The antibody itself is identified by RRID."}
   MS:        {name: PSI Mass Spectrometry Ontology, use: mass spectrometer}
 
 # ---------------------------------------------------------------------------
@@ -103,7 +103,7 @@ project:
 # ---------------------------------------------------------------------------
 protocol:
   protocol_name: {source: project, type: string, tier: bronze, why: "The name the SDRF will reference. Must be unique within the project."}
-  protocol_type: {source: project, ontology: EFO, tier: bronze, why: "growth / treatment / nucleic acid extraction / library construction / nucleic acid sequencing / normalization data transformation. Controlled — the IDF rejects free text."}
+  protocol_type: {source: project, ontology: EFO, tier: bronze, why: "EFO, not OBI. The IDF expects EFO protocol types: growth protocol / treatment protocol / nucleic acid extraction protocol / nucleic acid library construction protocol / nucleic acid sequencing protocol / normalization data transformation protocol. OBI was tried and has no protocol terms at this level — it returns a DEVICE (nucleic acid sequencer) and a MEASUREMENT (number of PCR cycles). An IDF built on those does not validate."}
   description:   {source: human,   type: text, tier: bronze, why: "The actual method. This IS your paper's methods section, written once and reused. If it is in the ELN, paste it."}
   hardware:      {source: auto,    type: string, required: false, tier: silver, why: "Instrument used by this protocol. Extractable for sequencing and MS."}
   software:      {source: auto,    type: string, required: false, tier: silver, why: "Software + version, from logs. Nobody should type 'CellRanger 7.1.0' by hand."}
@@ -115,7 +115,7 @@ protocol:
 sample:
   sample_id:    {source: human, type: string, tier: bronze, why: "Your name for this biological sample. Must match the lab book and the filenames."}
   organism_ref: {source: human, type: 'ref[project.organisms]', tier: bronze, why: "Which organism(s) are IN this sample. Dual/triple RNA-seq samples reference more than one."}
-  tissue:       {source: human, ontology: UBERON, required: false, tier: silver, why: "Anatomical site. Enables cross-study queries in community databases."}
+  tissue:       {source: human, ontology: UBERON, required: false, tier: silver, why: "Anatomical site. NOTE: bronchoalveolar lavage is NOT a tissue and is not in UBERON — record BAL under characteristics[] as {name: sample collection method}. Forcing a wrong UBERON term is worse than an honest characteristic."}
   cell_type:    {source: human, ontology: CL, required: false, tier: silver, why: "Sorted population or annotated cluster. 'Alveolar macrophage' = CL:0000583, not free text."}
   disease:      {source: project, ontology: MONDO, required: false, tier: silver, why: "Disease context. Free text here is why cross-study search fails."}
   sex:          {source: human, type: 'enum[male, female, mixed, not applicable, unknown]', tier: silver, why: "Required by ArrayExpress for every sample, including cell lines."}
@@ -142,6 +142,7 @@ sample:
   passage_number:    {source: human, type: int, required: false, tier: silver, why: "Cells drift. A passage-40 line is not the line you started with."}
   mycoplasma_tested: {source: human, type: bool, required: false, tier: silver, why: "Journals increasingly require it. It is one checkbox, and it is never recorded."}
   growth_condition:  {source: human, type: string, required: false, tier: silver, why: "2D, 3D, organoid, scaffold, matrix. Changes the biology and is invisible in the data."}
+  collection_method: {source: human, type: 'enum[not applicable, bronchoalveolar lavage, biopsy, whole tissue dissociation, FACS-sorted, MACS-sorted, blood draw, organoid harvest]', required: false, tier: silver, why: "HOW the sample was obtained. Added because bronchoalveolar lavage — likely A06's most common sample type — is not an anatomical structure and has no UBERON term. It was being forced into `tissue`, which is wrong. A lavage is a method; the tissue is still lung."}
 
   # ---- experimental design --------------------------------------------------
   factors:

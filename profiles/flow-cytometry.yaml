@@ -34,12 +34,12 @@ fields:
       tier: bronze
       why: "MIFlowCyt requires the full panel. This is also what makes flow data searchable — 'CD11c' as a PR term links to every other study using it."
       item_schema:
-        antigen:      {ontology: PR, required: true, why: "Protein Ontology term. 'CD11c' free-text does not join to anything; PR:000001313 does."}
+        antigen:      {ontology: MARKER, required: true, why: "From the curated marker vocabulary. NOT the Protein Ontology — PR names protein entities, not antibody targets, and querying it for 'CD4' returns CD44. A curated list of 35 markers is honest; a wrong CURIE is not."}
         clone:        {type: string, required: true, why: "Different clones of the same antibody give different results. This is the field everyone omits."}
         fluorochrome: {type: string, required: true}
         detector:     {source: auto, type: string, why: "Read from the FCS $PnN/$PnS keywords."}
         vendor_cat:   {type: string, required: false, why: "Vendor + catalogue number = the only truly unambiguous antibody identifier (RRID better still)."}
-        rrid:         {type: string, required: false, tier: gold, why: "GOLD. RRID:AB_xxxxx resolves the antibody uniquely, forever."}
+        rrid:         {type: string, required: false, tier: gold, why: "GOLD. RRID:AB_xxxxx resolves the antibody uniquely and forever — vendor, clone, lot lineage. THIS is the real identifier for a flow panel; the marker name is just a label. Look it up at scicrunch.org."}
 
   fcs_run:
     cytometer:        {source: auto, category: technical, ontology: EFO, tier: bronze, why: "In the FCS $CYT keyword. Never ask."}

@@ -46,8 +46,12 @@ SEEDS = {
         "lung", "alveolus of lung", "bronchus", "trachea", "respiratory system",
         "colon", "small intestine", "ileum", "caecum", "duodenum",
         "intestinal mucosa", "blood", "bone marrow", "spleen", "thymus",
-        "lymph node", "mesenteric lymph node", "pancreas", "liver", "skin",
-        "bronchoalveolar lavage fluid",
+        "lymph node", "mesenteric lymph node", "pancreas", "liver",
+        "skin of body",          # UBERON has no bare "skin" — only specific regions
+        # "bronchoalveolar lavage fluid" REMOVED: zero candidates in UBERON.
+        # BAL is a COLLECTION METHOD, not an anatomical structure. It goes in
+        # sample.characteristics[] as {name: sample collection method, value: BAL}.
+        # This matters: BAL is likely A06's most common sample type.
     ],
     "NCBITaxon": [  # host and pathogen
         "Homo sapiens", "Mus musculus",
@@ -56,11 +60,21 @@ SEEDS = {
         "Streptococcus pneumoniae", "Pseudomonas aeruginosa", "Escherichia coli",
         "Listeria monocytogenes", "Mycobacterium tuberculosis",
         "Influenza A virus", "Severe acute respiratory syndrome coronavirus 2",
-        "Human respiratory syncytial virus", "Murine cytomegalovirus",
+        # NCBI renamed both of these. The old names now resolve only to STRAINS,
+        # which is a silent downgrade in specificity — and a warning that a cached
+        # taxonomy rots. Re-run this script periodically and diff.
+        "human respiratory syncytial virus",   # species level (was: "Human respiratory syncytial virus")
+        "Murid betaherpesvirus 1",             # species level (was: "Murine cytomegalovirus")
     ],
     "MONDO": [
-        "aspergillosis", "invasive aspergillosis", "pneumonia", "sepsis",
-        "Clostridioides difficile infection", "inflammatory bowel disease",
+        "aspergillosis", "invasive aspergillosis", "pneumonia",
+        # "sepsis" REMOVED: MONDO returns only qualified variants ("bacterial
+        # infectious disease with sepsis", "sepsis, non-human animal"). Check OLS4
+        # by hand and add the right CURIE, or leave it to live search. Do not guess.
+        "Clostridium difficile colitis",   # the HUMAN disease term. "Clostridioides
+                                           # difficile infection" resolves only to the
+                                           # non-human-animal variant, which is wrong.
+        "inflammatory bowel disease",
         "pancreatic adenocarcinoma", "lung adenocarcinoma", "COVID-19", "influenza",
     ],
     "CHEBI": [
@@ -71,24 +85,40 @@ SEEDS = {
     "EFO": [
         "Illumina NovaSeq 6000", "Illumina NextSeq 500", "Illumina NextSeq 2000",
         "Illumina MiSeq", "Illumina HiSeq 4000",
-        "RNA-seq of coding RNA", "single cell RNA sequencing", "ATAC-seq",
+        "RNA-seq of coding RNA", "single-cell RNA sequencing", "ATAC-seq",   # hyphen!
+        # ArrayExpress IDF protocol types come from EFO, NOT OBI. These exact labels
+        # are what the IDF expects; OBI has no protocol terms at this level.
+        "growth protocol", "treatment protocol",
+        "nucleic acid extraction protocol",
+        "nucleic acid library construction protocol",
+        "nucleic acid sequencing protocol",
+        "normalization data transformation protocol",
     ],
     "OBI": [
+        # ASSAY TYPES ONLY. Protocol types were moved to EFO, because OBI does not
+        # have them: querying OBI for "nucleic acid sequencing" returns
+        # OBI:0001108 "nucleic acid sequencer" — a DEVICE — and for "library
+        # construction" it returns "number of PCR cycles during library
+        # construction" — a MEASUREMENT. An IDF built on those would not validate.
         "RNA-seq assay", "single-cell RNA sequencing assay", "mass spectrometry assay",
         "flow cytometry assay", "imaging assay",
-        "nucleic acid extraction", "library construction", "nucleic acid sequencing",
     ],
-    "PR": [  # flow antigens
-        "CD4", "CD8a", "CD11c", "CD45", "CD3e", "CD19", "Ly6G", "Ly6C",
-        "SiglecF", "F4/80", "MHC class II", "CD64", "CD11b", "NK1.1",
+    # PR REMOVED — 14/14 seeds failed, and the "matches" were worse than the misses:
+    #   CD4  -> PR:P16070-10  CD44 antigen isoform h10   (a DIFFERENT protein)
+    #   CD8a -> PR:F1NXT4     uncharacterized protein, chicken
+    # The Protein Ontology names protein ENTITIES; immunologists name antibody
+    # TARGETS. These are different vocabularies and no query tuning bridges them.
+    # Flow markers are now a hand-curated list (MARKERS, below), and the antibody
+    # itself is identified by RRID — which is the actual unambiguous identifier.
+    "MmusDv": [
+        # MmusDv has no bare "adult stage" — it is granular by design.
+        "young adult stage", "prime adult stage", "late adult stage",
+        "postnatal stage", "embryonic stage",
     ],
-    "MmusDv": ["adult stage", "postnatal stage", "embryonic stage"],
 }
 
 
-def fetch(onto: str, q: str, rows: int = 4):
-    url = (f"{OLS}/select?q={urllib.parse.quote(q)}"
-           f"&ontology={onto.lower()}&rows={rows}")
+def _query(url, onto):
     with urllib.request.urlopen(url, timeout=15) as r:
         j = json.load(r)
     docs = (j.get("response") or {}).get("docs") or []
@@ -100,6 +130,37 @@ def fetch(onto: str, q: str, rows: int = 4):
     return out
 
 
+# Hand-curated flow marker vocabulary. Not an ontology — a controlled list.
+# ~30 markers is an hour of work and gives something defensible, which is more
+# than a wrong PR CURIE ever will. Add to it as panels grow.
+MARKERS = [
+    "CD3e", "CD4", "CD8a", "CD11b", "CD11c", "CD19", "CD44", "CD45", "CD45R/B220",
+    "CD62L", "CD64", "CD69", "CD86", "CD103", "CD115", "CD117/c-Kit", "CD127",
+    "CD206", "F4/80", "Ly6C", "Ly6G", "MHC class I", "MHC class II (I-A/I-E)",
+    "NK1.1", "NKp46", "SiglecF", "TCRb", "TCRgd", "Ter119", "FoxP3", "Ki-67",
+    "IFN-gamma", "TNF-alpha", "IL-17A", "Live/Dead",
+]
+
+
+def fetch(onto: str, q: str, rows: int = 4):
+    """EXACT MATCH FIRST. This is the whole fix.
+
+    The first version went straight to a ranked fuzzy search, and OLS happily
+    ranked a more specific CHILD above the term asked for:
+        skin                    -> "pedal digit skin"
+        nucleic acid sequencing -> "nucleic acid extraction"
+        COVID-19                -> "post-COVID-19 disorder"
+    Every one of those labels exists exactly. We simply never asked for it.
+    """
+    qq = urllib.parse.quote(q)
+    o = onto.lower()
+    exact = _query(f"{OLS}/search?q={qq}&ontology={o}&exact=true&queryFields=label&rows=3", onto)
+    if exact:
+        return exact, True
+    fuzzy = _query(f"{OLS}/select?q={qq}&ontology={o}&rows={rows}", onto)
+    return fuzzy, False
+
+
 def main():
     cache, exact, fuzzy, missed = {}, 0, 0, []
     for onto, terms in SEEDS.items():
@@ -107,7 +168,7 @@ def main():
         print(f"{onto:10s} ", end="", flush=True)
         for t in terms:
             try:
-                hits = fetch(onto, t)
+                hits, was_exact = fetch(onto, t)
             except Exception as e:
                 print(f"\n  ! {onto}/{t}: {e}", file=sys.stderr)
                 missed.append(f"{onto}:{t}")
@@ -116,8 +177,8 @@ def main():
                 missed.append(f"{onto}:{t}")
                 print("·", end="", flush=True)
                 continue
-            # is the top hit an exact label match? If not, we are guessing.
-            top_exact = hits[0][1].lower() == t.lower()
+            # exact endpoint hit, or the top fuzzy hit happens to match the label
+            top_exact = was_exact or hits[0][1].lower() == t.lower()
             exact += top_exact
             fuzzy += (not top_exact)
             print("=" if top_exact else "~", end="", flush=True)
@@ -131,6 +192,11 @@ def main():
             time.sleep(0.05)
         cache[onto] = rows
         print(f"  {len(rows)} terms")
+
+    # the curated marker list ships as its own vocabulary, with no CURIEs,
+    # because an honest free-text controlled list beats a confident wrong CURIE.
+    cache["MARKER"] = [[m, m, 1] for m in MARKERS]
+    print(f"{'MARKER':10s} {'=' * len(MARKERS)}  {len(MARKERS)} terms (hand-curated, no ontology)")
 
     out = ROOT / "cv_cache.json"
     out.write_text(json.dumps(cache, indent=1, ensure_ascii=False))

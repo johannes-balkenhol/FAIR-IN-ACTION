@@ -33,7 +33,7 @@
   [
    "CL:0000784",
    "plasmacytoid dendritic cell",
-   0
+   1
   ],
   [
    "CL:0000066",
@@ -53,7 +53,7 @@
   [
    "CL:0002063",
    "pulmonary alveolar type 2 cell",
-   0
+   1
   ],
   [
    "CL:0000158",
@@ -76,9 +76,24 @@
    1
   ],
   [
+   "CL:0009009",
+   "paneth cell of colon",
+   0
+  ],
+  [
    "CL:0000510",
    "paneth cell",
    1
+  ],
+  [
+   "CL:1000343",
+   "paneth cell of epithelium of small intestine",
+   0
+  ],
+  [
+   "CL:0009055",
+   "paneth cell of anorectum",
+   0
   ],
   [
    "CL:0000584",
@@ -261,6 +276,11 @@
    "UBERON:0002107",
    "liver",
    1
+  ],
+  [
+   "UBERON:0002097",
+   "skin of body",
+   1
   ]
  ],
  "NCBITaxon": [
@@ -338,6 +358,16 @@
    "NCBITaxon:2697049",
    "Severe acute respiratory syndrome coronavirus 2",
    1
+  ],
+  [
+   "NCBITaxon:11250",
+   "human respiratory syncytial virus",
+   1
+  ],
+  [
+   "NCBITaxon:10366",
+   "Murid betaherpesvirus 1",
+   1
   ]
  ],
  "MONDO": [
@@ -349,11 +379,16 @@
   [
    "MONDO:0000240",
    "invasive aspergillosis",
-   0
+   1
   ],
   [
    "MONDO:0005249",
    "pneumonia",
+   1
+  ],
+  [
+   "MONDO:0000705",
+   "Clostridium difficile colitis",
    1
   ],
   [
@@ -369,6 +404,11 @@
   [
    "MONDO:0005061",
    "lung adenocarcinoma",
+   1
+  ],
+  [
+   "MONDO:0100096",
+   "COVID-19",
    1
   ],
   [
@@ -471,8 +511,43 @@
    1
   ],
   [
+   "EFO:0008913",
+   "single-cell RNA sequencing",
+   1
+  ],
+  [
    "EFO:0007045",
    "ATAC-seq",
+   1
+  ],
+  [
+   "EFO:0003789",
+   "growth protocol",
+   1
+  ],
+  [
+   "EFO:0003969",
+   "treatment protocol",
+   1
+  ],
+  [
+   "EFO:0002944",
+   "nucleic acid extraction protocol",
+   1
+  ],
+  [
+   "EFO:0004184",
+   "nucleic acid library construction protocol",
+   1
+  ],
+  [
+   "EFO:0004170",
+   "nucleic acid sequencing protocol",
+   1
+  ],
+  [
+   "EFO:0003816",
+   "normalization data transformation protocol",
    1
   ]
  ],
@@ -485,7 +560,7 @@
   [
    "OBI:0002631",
    "single-cell RNA sequencing assay",
-   0
+   1
   ],
   [
    "OBI:0000470",
@@ -501,256 +576,24 @@
    "OBI:0000185",
    "imaging assay",
    1
-  ],
-  [
-   "OBI:0666667",
-   "nucleic acid extraction",
-   1
-  ]
- ],
- "PR": [
-  [
-   "PR:P16070-10",
-   "CD44 antigen isoform h10 (human)",
-   0
-  ],
-  [
-   "PR:Q9I8D8",
-   "CD40 ligand (chicken)",
-   0
-  ],
-  [
-   "PR:P27548",
-   "CD40 ligand (mouse)",
-   0
-  ],
-  [
-   "PR:P29965",
-   "CD40 ligand (human)",
-   0
-  ],
-  [
-   "PR:F1NXT4",
-   "uncharacterized protein, CD8A translation product (chicken)",
-   0
-  ],
-  [
-   "PR:000001084",
-   "T-cell surface glycoprotein CD8 alpha chain",
-   0
-  ],
-  [
-   "PR:000025404",
-   "T-cell surface glycoprotein CD8 alpha chain isoform 2",
-   0
-  ],
-  [
-   "PR:P01731",
-   "T-cell surface glycoprotein CD8 alpha chain (mouse)",
-   0
-  ],
-  [
-   "PR:000001013",
-   "integrin alpha-X",
-   0
-  ],
-  [
-   "PR:P20702",
-   "integrin alpha-X (human)",
-   0
-  ],
-  [
-   "PR:Q9QXH4",
-   "integrin alpha-X (mouse)",
-   0
-  ],
-  [
-   "PR:000001014",
-   "receptor-type tyrosine-protein phosphatase C isoform CD45RABC",
-   0
-  ],
-  [
-   "PR:000001015",
-   "receptor-type tyrosine-protein phosphatase C isoform CD45RA",
-   0
-  ],
-  [
-   "PR:000025802",
-   "receptor-type tyrosine-protein phosphatase C isoform CD45RAB",
-   0
-  ],
-  [
-   "PR:000025803",
-   "receptor-type tyrosine-protein phosphatase C isoform CD45RAC",
-   0
-  ],
-  [
-   "PR:000005171",
-   "DNA-directed RNA polymerase I subunit RPA34",
-   0
-  ],
-  [
-   "PR:O15446",
-   "DNA-directed RNA polymerase I subunit RPA34 (human)",
-   0
-  ],
-  [
-   "PR:000001020",
-   "CD3 epsilon",
-   0
-  ],
-  [
-   "PR:P07766",
-   "T-cell surface glycoprotein CD3 epsilon chain (human)",
-   0
-  ],
-  [
-   "PR:P25918",
-   "B-lymphocyte antigen CD19 (mouse)",
-   0
-  ],
-  [
-   "PR:000001002",
-   "CD19 molecule",
-   0
-  ],
-  [
-   "PR:P15391",
-   "B-lymphocyte antigen CD19 (human)",
-   0
-  ],
-  [
-   "PR:000018300",
-   "CD19 molecule, signal peptide removed form",
-   0
-  ],
-  [
-   "PR:000009994",
-   "lymphocyte antigen 6 complex locus protein G6f",
-   0
-  ],
-  [
-   "PR:Q5SQ64",
-   "lymphocyte antigen 6 complex locus protein G6f (human)",
-   0
-  ],
-  [
-   "PR:000002978",
-   "lymphocyte antigen 6G",
-   0
-  ],
-  [
-   "PR:000009990",
-   "lymphocyte antigen 6 complex locus protein G5b",
-   0
-  ],
-  [
-   "PR:000002980",
-   "lymphocyte antigen 6C2",
-   0
-  ],
-  [
-   "PR:P0CW03",
-   "lymphocyte antigen 6C2 (mouse)",
-   0
-  ],
-  [
-   "PR:000029071",
-   "lymphocyte antigen 6C1",
-   0
-  ],
-  [
-   "PR:000018775",
-   "lymphocyte antigen 6C2, signal peptide removed form",
-   0
-  ],
-  [
-   "PR:000001927",
-   "sialic acid-binding Ig-like lectin 5",
-   0
-  ],
-  [
-   "PR:Q920G3",
-   "sialic acid-binding Ig-like lectin 5 (mouse)",
-   0
-  ],
-  [
-   "PR:F4JCY2",
-   "hyperosmolality-gated Ca2+ permeable channel 2.5 (Arabidopsis thaliana)",
-   0
-  ],
-  [
-   "PR:000008613",
-   "MHC class II histocompatibility antigen, DO beta chain",
-   0
-  ],
-  [
-   "PR:000030229",
-   "MHC class II histocompatibility antigen, DM alpha chain",
-   0
-  ],
-  [
-   "PR:000032795",
-   "MHC class II histocompatibility antigen, DM beta chain",
-   0
-  ],
-  [
-   "PR:P79621-2",
-   "MHC class II transactivator isoform m2 (mouse)",
-   0
-  ],
-  [
-   "PR:000001465",
-   "high affinity immunoglobulin gamma Fc receptor I",
-   0
-  ],
-  [
-   "PR:P12314",
-   "high affinity immunoglobulin gamma Fc receptor I (human)",
-   0
-  ],
-  [
-   "PR:P26151",
-   "high affinity immunoglobulin gamma Fc receptor I (mouse)",
-   0
-  ],
-  [
-   "PR:000001012",
-   "integrin alpha-M",
-   0
-  ],
-  [
-   "PR:P05555",
-   "integrin alpha-M (mouse)",
-   0
-  ],
-  [
-   "PR:P11215",
-   "integrin alpha-M (human)",
-   0
-  ],
-  [
-   "PR:000001247",
-   "substance-P receptor",
-   0
-  ],
-  [
-   "PR:P25103",
-   "substance-P receptor (human)",
-   0
-  ],
-  [
-   "PR:Q15270",
-   "NK1 transcription factor-related protein 1 (human)",
-   0
-  ],
-  [
-   "PR:G3UXB3",
-   "NK1 transcription factor-related protein 1 (mouse)",
-   0
   ]
  ],
  "MmusDv": [
+  [
+   "MmusDv:0000153",
+   "young adult stage",
+   1
+  ],
+  [
+   "MmusDv:0000136",
+   "prime adult stage",
+   1
+  ],
+  [
+   "MmusDv:0000134",
+   "late adult stage",
+   1
+  ],
   [
    "MmusDv:0000092",
    "postnatal stage",
@@ -759,6 +602,183 @@
   [
    "MmusDv:0000002",
    "embryonic stage",
+   1
+  ]
+ ],
+ "MARKER": [
+  [
+   "CD3e",
+   "CD3e",
+   1
+  ],
+  [
+   "CD4",
+   "CD4",
+   1
+  ],
+  [
+   "CD8a",
+   "CD8a",
+   1
+  ],
+  [
+   "CD11b",
+   "CD11b",
+   1
+  ],
+  [
+   "CD11c",
+   "CD11c",
+   1
+  ],
+  [
+   "CD19",
+   "CD19",
+   1
+  ],
+  [
+   "CD44",
+   "CD44",
+   1
+  ],
+  [
+   "CD45",
+   "CD45",
+   1
+  ],
+  [
+   "CD45R/B220",
+   "CD45R/B220",
+   1
+  ],
+  [
+   "CD62L",
+   "CD62L",
+   1
+  ],
+  [
+   "CD64",
+   "CD64",
+   1
+  ],
+  [
+   "CD69",
+   "CD69",
+   1
+  ],
+  [
+   "CD86",
+   "CD86",
+   1
+  ],
+  [
+   "CD103",
+   "CD103",
+   1
+  ],
+  [
+   "CD115",
+   "CD115",
+   1
+  ],
+  [
+   "CD117/c-Kit",
+   "CD117/c-Kit",
+   1
+  ],
+  [
+   "CD127",
+   "CD127",
+   1
+  ],
+  [
+   "CD206",
+   "CD206",
+   1
+  ],
+  [
+   "F4/80",
+   "F4/80",
+   1
+  ],
+  [
+   "Ly6C",
+   "Ly6C",
+   1
+  ],
+  [
+   "Ly6G",
+   "Ly6G",
+   1
+  ],
+  [
+   "MHC class I",
+   "MHC class I",
+   1
+  ],
+  [
+   "MHC class II (I-A/I-E)",
+   "MHC class II (I-A/I-E)",
+   1
+  ],
+  [
+   "NK1.1",
+   "NK1.1",
+   1
+  ],
+  [
+   "NKp46",
+   "NKp46",
+   1
+  ],
+  [
+   "SiglecF",
+   "SiglecF",
+   1
+  ],
+  [
+   "TCRb",
+   "TCRb",
+   1
+  ],
+  [
+   "TCRgd",
+   "TCRgd",
+   1
+  ],
+  [
+   "Ter119",
+   "Ter119",
+   1
+  ],
+  [
+   "FoxP3",
+   "FoxP3",
+   1
+  ],
+  [
+   "Ki-67",
+   "Ki-67",
+   1
+  ],
+  [
+   "IFN-gamma",
+   "IFN-gamma",
+   1
+  ],
+  [
+   "TNF-alpha",
+   "TNF-alpha",
+   1
+  ],
+  [
+   "IL-17A",
+   "IL-17A",
+   1
+  ],
+  [
+   "Live/Dead",
+   "Live/Dead",
    1
   ]
  ]
