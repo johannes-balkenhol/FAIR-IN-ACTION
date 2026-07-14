@@ -13,8 +13,17 @@ All notable changes to the model are recorded here. The model is versioned becau
 - `app/metadata_app.html` — generated form, OLS4-backed controlled vocabularies
 - `TIERS.md` — bronze/silver/gold, every criterion machine-checkable
 
+### Added (later the same day)
+- `fairlib.py` — shared loader; every script reads the model through one code path
+- `gapsheet.py` — CSV/Markdown sheet of only the `source: human` fields still empty
+- `validate.py` — schema, enum, ontology-CURIE and organism-role checks, plus a
+  `<FILL IN>` placeholder grep. Added because a placeholder survived a commit into
+  this repository's own `CITATION.cff`: `$EDITOR` was unset, the editor never opened,
+  and nobody noticed. A machine-detectable defect should be detected by a machine.
+- `audit.py` — bronze/silver/gold from `TIERS.md`; refuses to score a repo marked
+  `is_toolkit: true`
+
 ### Known gaps (do not use in production yet)
 - MAGE-TAB nesting is **inferred**, not validated against a real accepted SDRF/IDF
 - `export/*.map.yaml` are declared but not written — blocked on PANC E-MTAB-17360
 - `extractors/` not implemented — `source: auto` fields are simulated in the app
-- `validate.py`, `audit.py`, `gapsheet.py` not implemented

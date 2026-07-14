@@ -1,0 +1,63 @@
+# =============================================================================
+# .gitignore — one pattern PER LINE.
+# The first version of this file space-separated its patterns on one line.
+# Git reads one pattern per line, so it matched nothing, and a tarball walked
+# straight into the repository it was supposed to keep out. Hence this comment.
+# =============================================================================
+
+# --- data never enters this repository ---------------------------------------
+# This is a TOOLKIT. If a data file lands here, something has gone wrong.
+*.fastq
+*.fastq.gz
+*.fq
+*.fq.gz
+*.bam
+*.cram
+*.sam
+*.h5ad
+*.h5
+*.mtx
+*.loom
+*.raw
+*.fcs
+*.mzML
+*.mzXML
+*.tiff
+*.tif
+*.czi
+*.nd2
+data/
+raw/
+primary/
+processed/
+
+# --- archives: the anti-FAIR format ------------------------------------------
+# A zip is opaque, unversioned and undiffable. Unpack it and commit the files.
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.gz
+
+# --- filled project metadata belongs to the PROJECT, not the toolkit ----------
+project.yaml
+!project.yaml.template
+*_gapsheet.csv
+gaps.csv
+*_metadata.json
+
+# --- notebooks: strip outputs before commit (nbstripout) ---------------------
+.ipynb_checkpoints/
+
+# --- cruft -------------------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+.venv/
+venv/
+.env
+*.swp
+*~

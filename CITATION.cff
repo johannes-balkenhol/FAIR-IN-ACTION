@@ -11,7 +11,7 @@ type: software
 authors:
   - family-names: "Balkenhol"
     given-names: "Johannes"
-    orcid: "https://orcid.org/YOUR-REAL-ORCID"
+    orcid: "https://orcid.org/0000-0002-XXXX-XXXX"
     affiliation: "Core Unit Research Data Management (cRDM), Universität Würzburg"
 license: MIT
 repository-code: "https://github.com/johannes-balkenhol/FAIR-IN-ACTION"

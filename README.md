@@ -46,7 +46,7 @@ Every field in the model carries a `source:` tag. That single annotation generat
 ## Quick start
 
 ```bash
-git clone https://github.com/johannes-balkenhol/FAIR-IN-ACTION.git
+git clone <FILL IN: repository URL>
 cd FAIR-in-action
 
 # 1. open the metadata capture app in a browser
@@ -66,6 +66,15 @@ python3 build_app.py     # regenerates app/metadata_app.html from the YAML
 
 **The app is generated. Never edit it by hand.** Change the model, rebuild.
 
+### On the command line
+
+```bash
+python3 gapsheet.py --profile scrnaseq -o gaps.csv    # what only YOU can answer
+python3 validate.py --profile scrnaseq --online       # schema + ontology check
+python3 audit.py    --profile scrnaseq --path .       # bronze / silver / gold
+python3 validate.py --self                            # check the toolkit itself
+```
+
 ---
 
 ## What is in here
@@ -78,6 +87,10 @@ python3 build_app.py     # regenerates app/metadata_app.html from the YAML
 | [`app/metadata_app.html`](app/metadata_app.html) | The capture app. Categorised key–value form, prefilled standards, OLS4-backed vocabularies, multi-format export. |
 | [`TIERS.md`](TIERS.md) | Bronze / silver / gold. Every criterion machine-checkable — no judgement calls. |
 | [`showcase/`](showcase/README.md) | The projects that prove it works, and their tiers. |
+| [`fairlib.py`](fairlib.py) | The one place the model is loaded. Every script goes through it, so they cannot drift apart. |
+| [`gapsheet.py`](gapsheet.py) | Emits **only** the `source: human` fields still empty. The sheet you actually email someone. |
+| [`validate.py`](validate.py) | Schema, controlled vocabularies, ontology CURIEs, organism roles — and a `<FILL IN>` check, because one survived a commit into this repo's own `CITATION.cff`. |
+| [`audit.py`](audit.py) | Bronze / silver / gold, straight from `TIERS.md`. Refuses to score this repo — the ruler is not measured by its own rules. |
 | [`build_app.py`](build_app.py) | Model → app. |
 | `export/`, `extractors/` | Repository mappings and per-assay extractors. **Not yet written** — see *Status*. |
 
@@ -115,7 +128,7 @@ Three calls are load-bearing. If any is wrong, say so — they are cheap to chan
 | MAGE-TAB / SDRF nesting | ⚠️ **inferred, not verified** against an accepted submission |
 | `export/*.map.yaml` | ❌ not written — blocked on a real E-MTAB to reverse-engineer |
 | `extractors/` | ❌ not written — `source: auto` fields are *simulated* in the app |
-| `validate.py`, `audit.py`, `gapsheet.py` | ❌ not written |
+| `gapsheet.py`, `validate.py`, `audit.py` | ✅ written and tested |
 
 The honest summary: **the model is designed from evidence where we had evidence, and from imagination where we did not.** The exporters are deliberately unwritten rather than guessed.
 
