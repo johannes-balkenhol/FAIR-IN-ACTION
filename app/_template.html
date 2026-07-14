@@ -99,6 +99,13 @@ button.ghost{background:transparent;color:var(--ink)}
 button:hover{opacity:.87}
 button:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 .status{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto}
+.imp{font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.03em;padding:9px 15px;border-radius:2px;
+  cursor:pointer;border:1px solid var(--machine);background:var(--machine);color:#fff}
+.imp:hover{opacity:.87}
+.notes{border-left:3px solid var(--machine);background:rgba(20,125,119,.07);padding:11px 14px;margin:0 0 22px;
+  font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--ink)}
+.notes b{font-family:var(--sans);font-weight:600;display:block;margin-bottom:5px;color:var(--machine)}
+.notes div{color:var(--muted)}
 .status.warn{color:var(--bad)}
 
 dialog{border:1px solid var(--ink);border-radius:2px;padding:0;max-width:min(860px,92vw);width:100%;background:var(--panel)}
@@ -146,6 +153,7 @@ dialog pre{margin:0;padding:18px;font-family:var(--mono);font-size:12px;line-hei
 <main>
   <h1 id="title">Single-cell RNA-seq</h1>
   <p class="lede">Everything the machine can read from your data and everything already in <b>project.yaml</b> is filled in below and locked. <b>Fill only the amber rows</b> — those are the fields that exist nowhere but in your head. Then export to whatever the next step needs.</p>
+  <div class="notes" id="notes" hidden></div>
   <form id="form" autocomplete="off"></form>
 </main>
 
@@ -154,7 +162,10 @@ dialog pre{margin:0;padding:18px;font-family:var(--mono);font-size:12px;line-hei
 <div class="out">
   <select id="fmt" aria-label="Export format"></select>
   <button id="go">Export</button>
-  <button class="ghost" id="fill">Simulate import from data</button>
+  <label class="imp" for="drop">Import from data
+    <input type="file" id="drop" multiple accept=".fastq,.fq,.gz,.fcs" hidden>
+  </label>
+  <button class="ghost" id="fill">Simulate</button>
   <span class="status" id="status">—</span>
 </div>
 
@@ -206,6 +217,7 @@ async function lookup(onto, q){
 let profile = Object.keys(MODEL.profiles)[0];
 const values = {};   // key -> value  (in-memory only)
 let simulated = false;
+let imported = false;
 
 const CATS = [
   ["biological","Biological","who and what the sample is"],
@@ -323,7 +335,10 @@ function meter(){
   const c = {auto:0, project:0, human:0};
   fs.forEach(f => c[f.source]++);
   const filledHuman = fs.filter(f => f.source==='human' && String(values[key(f)]||'').trim()).length;
-  const done = {auto: simulated ? c.auto : 0, project: c.project, human: filledHuman};
+  const autoDone = imported
+    ? fs.filter(f => f.source==='auto' && String(values[key(f)]||'').trim()).length
+    : (simulated ? c.auto : 0);
+  const done = {auto: autoDone, project: c.project, human: filledHuman};
   for(const s of ['auto','project','human']){
     document.getElementById('b-'+s).style.width = (100*done[s]/Math.max(c[s],1)) + '%';
     document.getElementById('n-'+s).textContent = `${done[s]}/${c[s]}`;
@@ -336,6 +351,135 @@ function meter(){
   const st = document.getElementById('status');
   st.textContent = left ? `${left} required field${left===1?'':'s'} still empty` : 'complete — ready to export';
   st.className = 'status' + (left ? ' warn' : '');
+}
+
+/* ---------- REAL IMPORTER — parses your actual files, in the browser ----------
+   No upload. Nothing leaves this machine. FASTQ headers and FCS TEXT segments
+   are both readable client-side; .gz is handled by DecompressionStream.
+   h5ad (HDF5) and vendor MS .raw are NOT parseable here — use extractors/ on HPC. */
+
+const INSTR = [[/^A0/,"EFO:0008563 Illumina NovaSeq 6000"],[/^LH/,"Illumina NovaSeq X"],
+  [/^VH/,"Illumina NextSeq 2000"],[/^N[BS]/,"EFO:0008565 Illumina NextSeq 500"],
+  [/^M0/,"EFO:0004205 Illumina MiSeq"],[/^[JK]0/,"EFO:0008564 Illumina HiSeq 4000"]];
+const CHEM = {26:["10x 3' v2",10], 28:["10x 3' v3",12]};
+
+async function headBytes(file, n=65536){
+  const slice = file.slice(0, n);
+  if(!/\.gz$/i.test(file.name)) return new Uint8Array(await slice.arrayBuffer());
+  const ds = new DecompressionStream('gzip');
+  const stream = slice.stream().pipeThrough(ds);
+  const reader = stream.getReader();
+  const chunks = []; let got = 0;
+  while(got < 4096){
+    const {done, value} = await reader.read();
+    if(done) break;
+    chunks.push(value); got += value.length;
+  }
+  reader.cancel().catch(()=>{});
+  const out = new Uint8Array(got); let o = 0;
+  for(const c of chunks){ out.set(c, o); o += c.length; }
+  return out;
+}
+
+async function parseFastq(file){
+  const bytes = await headBytes(file);
+  const txt = new TextDecoder().decode(bytes);
+  const [head, seq] = txt.split('\n');
+  const m = head.match(/^@([^:]+):([^:]+):([^:]+):([^:]+):[^:]+:[^:]+:[^:\s]+(?:\s(\d+):[YN]:\d+:(\S+))?/);
+  if(!m) throw new Error(`${file.name}: header is not Illumina-shaped`);
+  const [,instr,run,flowcell,lane,,index] = m;
+  const model = (INSTR.find(([rx]) => rx.test(instr)) || [,''])[1];
+  const idx = index || '';
+  const rt = /_R1[_.]/.test(file.name) ? 'read1' : /_R2[_.]/.test(file.name) ? 'read2'
+           : /_I1[_.]/.test(file.name) ? 'index1' : /_I2[_.]/.test(file.name) ? 'index2' : 'not applicable';
+  const v = {
+    'file.file_name': file.name, 'file.file_type':'fastq', 'file.file_role':'raw',
+    'file.read_type': rt, 'file.size_bytes': file.size.toLocaleString(),
+    'assay.instrument': model, 'assay.flowcell_id': flowcell, 'assay.lane': lane,
+    'library.index_sequence': idx,
+    'assay.index_length': idx ? idx.split('+').map(s=>s.length).join(', ') : '',
+    'assay.read_length': String(seq.length),
+    '_flowcell': flowcell, '_readlen': seq.length, '_rt': rt
+  };
+  if(rt === 'read1' && CHEM[seq.length]){
+    const [chem, umi] = CHEM[seq.length];
+    v['library.chemistry'] = chem;
+    v['library.barcode_read'] = 'R1';
+    v['library.umi_length'] = String(umi);
+    v['_note'] = `R1 is ${seq.length} bp → ${chem} (16 bp barcode + ${umi} bp UMI). Confirm with the facility.`;
+  }
+  return v;
+}
+
+async function parseFcs(file){
+  const head = new TextDecoder('latin1').decode(new Uint8Array(await file.slice(0,58).arrayBuffer()));
+  if(!head.startsWith('FCS')) throw new Error(`${file.name}: not an FCS file`);
+  const ts = parseInt(head.slice(10,18)), te = parseInt(head.slice(18,26));
+  const text = new TextDecoder('latin1').decode(new Uint8Array(await file.slice(ts, te+1).arrayBuffer()));
+  const d = text[0], parts = text.slice(1).split(d), kw = {};
+  for(let i=0;i<parts.length-1;i+=2) if(parts[i].trim()) kw[parts[i].trim()] = parts[i+1].trim();
+  const npar = parseInt(kw['$PAR']||0), markers = [];
+  for(let i=1;i<=npar;i++){
+    const det = kw[`$P${i}N`]||'', mk = kw[`$P${i}S`]||'';
+    if(!mk && /^(FSC|SSC|Time)/i.test(det)) continue;
+    if(mk) markers.push(`${mk} (${det})`);
+  }
+  return {
+    'file.file_name': file.name, 'file.file_type':'fcs', 'file.file_role':'raw',
+    'file.size_bytes': file.size.toLocaleString(),
+    'fcs_run.cytometer': kw['$CYT']||'', 'fcs_run.acquisition_date': kw['$DATE']||'',
+    'fcs_run.operator': kw['$OP']||'', 'fcs_run.n_events': (+kw['$TOT']||0).toLocaleString(),
+    'fcs_run.compensation': (kw['$SPILLOVER']||kw['SPILL']) ? 'matrix in FCS' : 'none',
+    'panel.markers': markers.join(', '),
+    '_note': `${markers.length} markers read from $PnN/$PnS. The antibody CLONE is NOT in the file — only you know it.`
+  };
+}
+
+async function importFiles(files){
+  const st = document.getElementById('status');
+  st.textContent = `reading ${files.length} file(s)…`; st.className = 'status';
+  const got = {}, notes = [], flowcells = new Set(), reads = [];
+  let n = 0;
+  for(const f of files){
+    try{
+      const v = /\.fcs$/i.test(f.name) ? await parseFcs(f) : await parseFastq(f);
+      if(v._flowcell) flowcells.add(v._flowcell);
+      if(v._note) notes.push(v._note);
+      if(v._readlen) reads.push(v._readlen);
+      if(v._rt === 'read2') got['library.library_layout'] = 'PAIRED';
+      for(const [k, val] of Object.entries(v)) if(!k.startsWith('_') && val !== '') got[k] = val;
+      n++;
+    }catch(e){ notes.push(`⚠ ${e.message}`); }
+  }
+  if(reads.length > 1) got['assay.read_length'] = [...new Set(reads)].sort((a,b)=>a-b).join(', ');
+  if(!got['library.library_layout'] && n) got['library.library_layout'] = 'SINGLE';
+
+  // the batch effect nobody sees
+  if(flowcells.size > 1){
+    notes.push(`⚠ ${flowcells.size} different flowcells: ${[...flowcells].join(', ')}. `
+             + `That is a BATCH — set assay.batch, or integration will silently absorb it.`);
+  }
+
+  // paint the locked auto rows with REAL values
+  let filled = 0;
+  document.querySelectorAll('.f.auto').forEach(row => {
+    const k = row.dataset.k, el = row.querySelector('[data-lock]');
+    if(got[k] !== undefined && el){
+      el.textContent = got[k];
+      el.style.color = 'var(--ink)';
+      values[k] = got[k];
+      row.classList.add('done');
+      filled++;
+    }
+  });
+  imported = filled > 0;
+  meter();
+  const box = document.getElementById('notes');
+  box.innerHTML = notes.length
+    ? `<b>${n} file(s) read · ${filled} field(s) filled · 0 questions asked</b>`
+      + notes.map(x => `<div>${x}</div>`).join('')
+    : `<b>${n} file(s) read · ${filled} field(s) filled</b>`;
+  box.hidden = false;
 }
 
 /* ---------- exports ---------- */
@@ -406,17 +550,22 @@ document.getElementById('dl').onclick = () => {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(b); a.download = current[2]; a.click(); URL.revokeObjectURL(a.href);
 };
+document.getElementById('drop').onchange = e => {
+  if(e.target.files.length) importFiles([...e.target.files]);
+  e.target.value = '';
+};
 document.getElementById('fill').onclick = () => {
-  simulated = !simulated;
+  simulated = !simulated; imported = false;
   document.querySelectorAll('.f.auto [data-lock]').forEach(el => {
     const k = el.closest('.f').dataset.k;
     el.textContent = simulated ? (MODEL.demo[k] ?? '⟨extracted⟩') : '⟨from data⟩';
   });
-  document.getElementById('fill').textContent = simulated ? 'Clear imported values' : 'Simulate import from data';
+  document.getElementById('fill').textContent = simulated ? 'Clear' : 'Simulate';
   meter();
 };
-document.getElementById('profile').onchange = e => { profile = e.target.value; simulated=false;
-  document.getElementById('fill').textContent='Simulate import from data'; render(); };
+document.getElementById('profile').onchange = e => { profile = e.target.value; simulated=false; imported=false;
+  document.getElementById('notes').hidden = true;
+  document.getElementById('fill').textContent='Simulate'; render(); };
 document.getElementById('pid').oninput = () => {};
 
 document.getElementById('profile').innerHTML =
