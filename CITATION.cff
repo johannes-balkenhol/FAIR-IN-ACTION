@@ -14,7 +14,7 @@ authors:
     orcid: "https://orcid.org/0000-0000-0000-0000"
     affiliation: "Core Unit Research Data Management (cRDM), Universität Würzburg"
 license: MIT
-repository-code: "<FILL IN: GitLab/GitHub URL>"
+repository-code: "https://github.com/johannes-balkenhol/FAIR-IN-ACTION"
 doi: "<FILL IN after first Zenodo release>"
 version: 0.1.0
 date-released: "2026-07-14"

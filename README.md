@@ -46,7 +46,7 @@ Every field in the model carries a `source:` tag. That single annotation generat
 ## Quick start
 
 ```bash
-git clone <FILL IN: repository URL>
+git clone https://github.com/johannes-balkenhol/FAIR-IN-ACTION.git
 cd FAIR-in-action
 
 # 1. open the metadata capture app in a browser
