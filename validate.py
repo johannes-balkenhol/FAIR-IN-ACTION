@@ -28,17 +28,29 @@ def ok(m):   OK.append(m)
 
 
 def check_placeholders(root: pathlib.Path):
-    """The check that would have caught the CITATION.cff slip."""
+    """The check that would have caught the CITATION.cff slip.
+
+    Skips matches inside `backticks`, because otherwise this check flags the
+    documentation that describes it — which it did, on its first run.
+    """
     hits = []
     for p in root.rglob("*"):
         if not p.is_file() or ".git" in p.parts:
             continue
         if p.suffix not in (".yaml", ".yml", ".cff", ".md", ".template", ".json", ".toml"):
             continue
+        # a TEMPLATE is supposed to contain placeholders. That is what makes it a template.
+        if p.name.endswith(".template") or p.name == "project.yaml.template":
+            continue
         try:
             for i, line in enumerate(p.read_text(errors="ignore").splitlines(), 1):
-                if PLACEHOLDERS.search(line):
-                    hits.append(f"{p.relative_to(root)}:{i}  {line.strip()[:70]}")
+                m = PLACEHOLDERS.search(line)
+                if not m:
+                    continue
+                # inside a code span / inline code? then it is prose about the check.
+                if line.count("`", 0, m.start()) % 2 == 1:
+                    continue
+                hits.append(f"{p.relative_to(root)}:{i}  {line.strip()[:70]}")
         except Exception:
             pass
     return hits

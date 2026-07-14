@@ -1,0 +1,42 @@
+# .github/workflows/validate.yml
+# TIERS.md G5. Would have caught every slip made while setting this repo up:
+#   - a <FILL IN> that survived a commit ($EDITOR was unset)
+#   - a literal "YOUR-REAL-ORCID" written by a careless sed
+#   - a tarball committed because .gitignore had its patterns space-separated
+#   - __pycache__ committed for the same reason
+# None of these produced an error at the terminal. All of them are machine-detectable.
+name: validate
+on: [push, pull_request]
+
+jobs:
+  self-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.11'}
+      - run: pip install pyyaml
+
+      - name: Model parses and every field has a `why:`
+        run: python3 validate.py --self
+
+      - name: The app is generated, not hand-edited
+        run: |
+          python3 build_app.py
+          git diff --exit-code app/metadata_app.html \
+            || { echo "::error::app/metadata_app.html is out of date with the model. Run build_app.py."; exit 1; }
+
+      - name: No data, no archives, no cruft in the repository
+        run: |
+          if git ls-files | grep -E '\.(zip|tar|tar\.gz|tgz|fastq|fastq\.gz|bam|h5ad|fcs|raw|pyc)$|__pycache__'; then
+            echo "::error::A file that must never be committed is in the repository."
+            exit 1
+          fi
+
+      - name: No unfilled placeholders outside templates
+        run: |
+          if grep -rn --exclude-dir=.git --exclude='*.template' --exclude='*.yml' \
+               -E '<FILL[ _]?IN|0000-0000-0000-0000|YOUR-REAL|XXXX-XXXX' . ; then
+            echo "::error::An unfilled placeholder reached the repository."
+            exit 1
+          fi
