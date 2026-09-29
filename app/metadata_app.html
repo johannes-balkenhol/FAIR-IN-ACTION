@@ -120,6 +120,8 @@ button{font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.03
 button.ghost{background:transparent;color:var(--ink)}
 button:hover{opacity:.87}
 button:focus-visible{outline:2px solid var(--you);outline-offset:2px}
+.fsbtn{cursor:pointer}
+.autosave{font-family:var(--mono);font-size:11px;color:var(--machine);margin-left:8px}
 .status{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto}
 .imp{font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.03em;padding:9px 15px;border-radius:2px;
   cursor:pointer;border:1px solid var(--machine);background:var(--machine);color:#fff}
@@ -192,6 +194,10 @@ dialog pre{margin:0;padding:18px;font-family:var(--mono);font-size:12px;line-hei
     <input type="file" id="dropm" accept=".yaml,.yml,.csv,.json" hidden>
   </label>
   <button class="ghost" id="fill">Simulate</button>
+  <button class="ghost" id="saveTpl" title="Aktuelle Werte als Vorlage für den nächsten Run speichern">Save template</button>
+  <label class="ghost fsbtn" for="loadTpl" title="Vorlage laden">Load template<input type="file" id="loadTpl" accept=".json" hidden></label>
+  <button class="ghost" id="openDir" title="Datenordner öffnen (Chrome/Edge) — Metadaten neben die Rohdaten schreiben">📁 Datenordner</button>
+  <span id="autosave" class="autosave"></span>
   <span class="status" id="status">—</span>
 </div>
 
@@ -314,7 +320,34 @@ function setOlsBadge(){
 
 /* ---------- state ---------- */
 let profile = Object.keys(MODEL.profiles)[0];
-const values = {};   // key -> value  (in-memory only)
+const values = {};   // key -> value
+
+// ---- PERSISTENZ (localStorage): öffnen→füllen→schließen→wieder öffnen = bleibt ----
+// Speichert pro (Projekt-ID + Profil), damit verschiedene Runs sich nicht überschreiben.
+function storeKey(){
+  const pid = (document.getElementById('pid') && document.getElementById('pid').value) || 'MYPROJ';
+  return 'fair_meta::' + pid + '::' + (typeof profile!=='undefined'?profile:'');
+}
+let _saveTimer=null;
+function autosave(){
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{
+    try{
+      localStorage.setItem(storeKey(), JSON.stringify(values));
+      const n=document.getElementById('autosave');
+      if(n){ n.textContent='✓ gespeichert '+new Date().toLocaleTimeString(); }
+    }catch(e){ /* localStorage evtl. aus */ }
+  },400);
+}
+function restore(){
+  try{
+    const raw=localStorage.getItem(storeKey());
+    if(!raw) return false;
+    const saved=JSON.parse(raw);
+    Object.assign(values, saved);
+    return true;
+  }catch(e){ return false; }
+}
 const overrides = {}; // key -> {was, now, source} — a hand-corrected machine value is provenance
 let simulated = false;
 let imported = false;
@@ -504,7 +537,7 @@ function override(d, f, v){
   el.focus();
 }
 
-function meter(){
+function meter(){ autosave();
   const fs = fields();
   const tot = fs.length;
   const c = {auto:0, project:0, human:0};
@@ -859,6 +892,82 @@ document.getElementById('pid').oninput = () => {};
 document.getElementById('profile').innerHTML =
   Object.entries(MODEL.profiles).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
 render();
+
+// gespeicherte Werte wiederherstellen (nach render, damit die Felder existieren)
+function repaintFromValues(){
+  for(const f of fields()){
+    const k=key(f); const v=values[k];
+    if(v===undefined||v==='') continue;
+    const rw=document.querySelector(`.f[data-k="${k}"]`);
+    if(!rw) continue;
+    const lock=rw.querySelector('[data-lock]'); if(lock){ lock.textContent=v; lock.style.color='var(--ink)'; }
+    const inp=rw.querySelector('input,select,textarea'); if(inp) inp.value=v;
+    rw.classList.add('done');
+  }
+  meter();
+}
+if(restore()){ repaintFromValues();
+  const n=document.getElementById('autosave'); if(n) n.textContent='✓ wiederhergestellt';
+}
+
+// ---- Template speichern / laden (für den nächsten Experiment-Run) ----
+document.getElementById('saveTpl').onclick=()=>{
+  const blob=new Blob([JSON.stringify(values,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(document.getElementById('pid')?.value||'MYPROJ')+'_template.json';
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById('loadTpl').onchange=async e=>{
+  const f=e.target.files[0]; if(!f) return;
+  try{ const t=JSON.parse(await f.text()); Object.assign(values,t); repaintFromValues();
+    const n=document.getElementById('autosave'); if(n) n.textContent='✓ Vorlage geladen — nur noch anpassen';
+  }catch(err){ alert('Konnte Vorlage nicht lesen: '+err); }
+  e.target.value='';
+};
+
+// ---- Datenordner öffnen (File System Access API — Chrome/Edge) ----
+// Bleibt eine HTML-App! Schreibt <projekt>.meta.json NEBEN die Rohdaten.
+let _dirHandle=null;
+document.getElementById('openDir').onclick=async ()=>{
+  const n=document.getElementById('autosave');
+  if(!window.showDirectoryPicker){
+    alert('Ordner-Zugriff braucht Chrome oder Edge.\n\nIn Firefox/Safari: nutze "Import from data" '+
+          '(Dateien reinziehen) und "Export" (Metadaten speichern) — das funktioniert überall.');
+    return;
+  }
+  try{
+    _dirHandle=await window.showDirectoryPicker();
+    // Dateien im Ordner auflisten (Rohdaten sehen)
+    const files=[];
+    for await (const [name,handle] of _dirHandle.entries()){
+      if(handle.kind==='file') files.push(name);
+    }
+    // vorhandene <projekt>.meta.json laden, falls schon annotiert (nachträgliche Annotation!)
+    const metaName=(document.getElementById('pid')?.value||'MYPROJ')+'.meta.json';
+    try{
+      const mh=await _dirHandle.getFileHandle(metaName);
+      const txt=await (await mh.getFile()).text();
+      Object.assign(values, JSON.parse(txt)); repaintFromValues();
+      if(n) n.textContent='✓ '+metaName+' gefunden & geladen — du kannst ergänzen';
+    }catch(_){
+      if(n) n.textContent='📁 '+files.length+' Dateien im Ordner — noch keine '+metaName;
+    }
+    // die gefundenen Dateinamen ins File-Feld eintragen, falls vorhanden
+    const fileField=fields().find(f=>f.name==='file_name'||f.name==='raw_files');
+    if(fileField && files.length){ values[key(fileField)]=files.join('; '); repaintFromValues(); }
+    // Button zum Zurückschreiben aktivieren
+    document.getElementById('openDir').textContent='💾 Metadaten in Ordner schreiben';
+    document.getElementById('openDir').onclick=async ()=>{
+      try{
+        const mh=await _dirHandle.getFileHandle(metaName,{create:true});
+        const w=await mh.createWritable();
+        await w.write(JSON.stringify(values,null,2)); await w.close();
+        if(n) n.textContent='✓ '+metaName+' neben die Rohdaten geschrieben';
+      }catch(err){ alert('Schreiben fehlgeschlagen: '+err); }
+    };
+  }catch(err){ if(err.name!=='AbortError') alert('Ordner öffnen: '+err); }
+};
 </script>
 </body>
 </html>
