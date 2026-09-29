@@ -121,6 +121,14 @@ button.ghost{background:transparent;color:var(--ink)}
 button:hover{opacity:.87}
 button:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 .fsbtn{cursor:pointer}
+.dl-box{padding:8px 0}
+.dl-intro{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.dl-intro code{font-family:var(--mono);background:var(--panel);padding:0 4px}
+.dl-actions{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.dl-count{font-family:var(--mono);font-size:12px;color:var(--machine);margin-left:auto}
+.dl-empty{color:var(--muted);font-size:13px}
+#dlTableWrap{max-height:340px;overflow:auto;border:1px solid var(--rule);border-radius:4px}
+#dlTableWrap:empty{border:none}
 .manitable{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--mono)}
 .manitable th{text-align:left;color:var(--muted);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--panel)}
 .manitable td{padding:2px 6px;border-bottom:1px solid var(--rule)}
@@ -347,6 +355,7 @@ function setOlsBadge(){
 /* ---------- state ---------- */
 let profile = Object.keys(MODEL.profiles)[0];
 const values = {};   // key -> value
+let manifest = [];   // data-links Manifest (früh deklariert, damit render() es kennt)
 
 // ---- PERSISTENZ (localStorage): öffnen→füllen→schließen→wieder öffnen = bleibt ----
 // Speichert pro (Projekt-ID + Profil), damit verschiedene Runs sich nicht überschreiben.
@@ -417,8 +426,95 @@ function render(){
     const nHuman = fs.filter(f=>f.source==='human').length;
     nav.insertAdjacentHTML('beforeend',
       `<a href="#sec-${cid}">${clabel}<span class="c" style="color:${nHuman?'var(--you)':'var(--muted)'}">${nHuman?nHuman+' to fill':'✓'}</span></a>`);
+    // Data-links-Abschnitt direkt NACH 'biological' einfügen
+    if(cid === 'biological'){
+      form.appendChild(renderDataLinksSection());
+      nav.insertAdjacentHTML('beforeend',
+        `<a href="#sec-datalinks">Data links<span class="c" style="color:var(--machine)" id="nav-dl">${manifest.length?manifest.length+' Dateien':'0'}</span></a>`);
+    }
   }
   meter();
+}
+
+// ---- Data-links als sichtbarer Formular-Abschnitt ----
+function renderDataLinksSection(){
+  const sec = document.createElement('section');
+  sec.id = 'sec-datalinks';
+  const nSamples = new Set(manifest.map(r=>r.sample).filter(Boolean)).size;
+  sec.innerHTML = `
+    <h2>Data links<em>which file belongs to which sample</em></h2>
+    <div class="dl-box">
+      <div class="dl-intro">
+        Bei vielen Dateien mit meist gleichen Metadaten: die Projekt-Felder gelten für alle,
+        hier nur die <b>abweichenden</b> pro Datei (sample, library, read, lane). Das Muster
+        wird aus dem Dateinamen vorgeschlagen (z.B. <code>S1_L001_R1.fastq</code>), du korrigierst nur.
+        Das ist genau ein SDRF: Vererbung + Manifest.
+      </div>
+      <div class="dl-actions">
+        <label class="ghost fsbtn" for="dlFiles">Dateien wählen<input type="file" id="dlFiles" multiple hidden></label>
+        <button type="button" class="ghost" id="dlDir">📁 Ordner</button>
+        <button type="button" class="ghost" id="dlGuess">Muster erkennen</button>
+        <span class="dl-count">${manifest.length} Dateien · ${nSamples} Samples</span>
+      </div>
+      <div id="dlTableWrap"></div>
+    </div>`;
+  // nach dem Anhängen die Handler binden (per setTimeout, da noch nicht im DOM)
+  setTimeout(bindDataLinks, 0);
+  return sec;
+}
+
+function dlTable(){
+  const wrap = document.getElementById('dlTableWrap');
+  if(!wrap) return;
+  if(!manifest.length){ wrap.innerHTML = '<p class="dl-empty">Noch keine Dateien verknüpft.</p>'; return; }
+  const cols = ['file','sample','library','read','lane','path','md5'];
+  let h = '<table class="manitable"><thead><tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  manifest.forEach((row,i)=>{
+    h += '<tr>'+cols.map(c=>{
+      const val=(row[c]||'').replace(/"/g,'&quot;');
+      const ro = c==='file' ? 'readonly style="color:var(--muted)"' : '';
+      return `<td><input data-i="${i}" data-c="${c}" value="${val}" ${ro}></td>`;
+    }).join('')+'</tr>';
+  });
+  h += '</tbody></table>';
+  wrap.innerHTML = h;
+  wrap.querySelectorAll('input[data-c]').forEach(inp=>{
+    inp.oninput = e => { manifest[+e.target.dataset.i][e.target.dataset.c]=e.target.value; saveManifest(); dlUpdateCount(); };
+  });
+}
+function dlUpdateCount(){
+  const nSamples = new Set(manifest.map(r=>r.sample).filter(Boolean)).size;
+  document.querySelectorAll('.dl-count').forEach(n=>n.textContent=`${manifest.length} Dateien · ${nSamples} Samples`);
+  const nav=document.getElementById('nav-dl'); if(nav) nav.textContent=manifest.length?manifest.length+' Dateien':'0';
+  values['_manifest']=manifest; autosave();
+}
+function bindDataLinks(){
+  const ff=document.getElementById('dlFiles');
+  if(ff) ff.onchange=e=>{
+    for(const f of e.target.files){ if(!manifest.find(r=>r.file===f.name))
+      manifest.push({file:f.name,sample:'',library:'',read:'',lane:'',path:f.webkitRelativePath||'',md5:''}); }
+    saveManifest(); dlTable(); dlUpdateCount(); e.target.value='';
+  };
+  const dd=document.getElementById('dlDir');
+  if(dd) dd.onclick=async()=>{
+    if(!window.showDirectoryPicker){ alert('Ordner-Zugriff braucht Chrome/Edge. In Firefox: „Dateien wählen".'); return; }
+    try{ const dir=await window.showDirectoryPicker();
+      async function walk(h,p){ for await (const [n,e] of h.entries()){
+        if(e.kind==='file'){ if(/\.(fastq|fq|gz|bam|h5|h5ad|csv|tif|tiff|fcs|raw|mzml)$/i.test(n) && !manifest.find(r=>r.file===n))
+          manifest.push({file:n,sample:'',library:'',read:'',lane:'',path:(p?p+'/':'')+n,md5:''}); }
+        else if(e.kind==='directory'){ await walk(e,(p?p+'/':'')+n); } } }
+      await walk(dir,''); saveManifest(); dlTable(); dlUpdateCount();
+    }catch(err){ if(err.name!=='AbortError') alert(err); }
+  };
+  const gg=document.getElementById('dlGuess');
+  if(gg) gg.onclick=()=>{
+    manifest=manifest.map(r=>{ const g=guessFromName(r.file);
+      // library aus sample+lane ableiten, falls leer
+      const lib = r.library || (g.sample && g.lane ? g.sample+'_'+g.lane : (g.sample?g.sample+'_lib':''));
+      return {...r, sample:r.sample||g.sample, read:r.read||g.read, lane:r.lane||g.lane, library:lib}; });
+    saveManifest(); dlTable(); dlUpdateCount();
+  };
+  dlTable();
 }
 
 function row(f){
@@ -917,11 +1013,12 @@ document.getElementById('pid').oninput = () => {};
 
 document.getElementById('profile').innerHTML =
   Object.entries(MODEL.profiles).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
+loadManifest();
 render();
 
 // ============ DATA LINKS / MANIFEST ============
 // manifest: [{file, sample, read, lane, path, md5}]
-let manifest = [];
+/* manifest oben deklariert */
 function loadManifest(){ try{ const r=localStorage.getItem(storeKey()+'::manifest'); if(r) manifest=JSON.parse(r);}catch(e){} }
 function saveManifest(){ try{ localStorage.setItem(storeKey()+'::manifest', JSON.stringify(manifest)); }catch(e){} }
 loadManifest();
