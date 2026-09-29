@@ -121,6 +121,12 @@ button.ghost{background:transparent;color:var(--ink)}
 button:hover{opacity:.87}
 button:focus-visible{outline:2px solid var(--you);outline-offset:2px}
 .fsbtn{cursor:pointer}
+.manitable{width:100%;border-collapse:collapse;font-size:12px;font-family:var(--mono)}
+.manitable th{text-align:left;color:var(--muted);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--rule);position:sticky;top:0;background:var(--panel)}
+.manitable td{padding:2px 6px;border-bottom:1px solid var(--rule)}
+.manitable input,.manitable select{width:100%;border:1px solid transparent;background:transparent;font-family:var(--mono);font-size:12px;padding:2px}
+.manitable input:focus{border-color:var(--you);background:#fff}
+.manitable tr:hover td{background:rgba(20,125,119,.04)}
 .autosave{font-family:var(--mono);font-size:11px;color:var(--machine);margin-left:8px}
 .status{font-family:var(--mono);font-size:12px;color:var(--muted);margin-left:auto}
 .imp{font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.03em;padding:9px 15px;border-radius:2px;
@@ -197,9 +203,29 @@ dialog pre{margin:0;padding:18px;font-family:var(--mono);font-size:12px;line-hei
   <button class="ghost" id="saveTpl" title="Aktuelle Werte als Vorlage für den nächsten Run speichern">Save template</button>
   <label class="ghost fsbtn" for="loadTpl" title="Vorlage laden">Load template<input type="file" id="loadTpl" accept=".json" hidden></label>
   <button class="ghost" id="openDir" title="Datenordner öffnen (Chrome/Edge) — Metadaten neben die Rohdaten schreiben">📁 Datenordner</button>
+  <button class="ghost" id="manifest" title="Data links: Dateien Samples zuordnen (Manifest)">🔗 Data links</button>
   <span id="autosave" class="autosave"></span>
   <span class="status" id="status">—</span>
 </div>
+
+<dialog id="mani">
+  <div class="dh"><b>Data links — Datei ↔ Sample (Manifest)</b>
+    <span>
+      <label class="ghost fsbtn" for="maniFiles" title="Dateien wählen">Dateien wählen<input type="file" id="maniFiles" multiple hidden></label>
+      <button class="ghost" id="maniDir">📁 Ordner</button>
+      <button class="ghost" id="maniGuess">Muster erkennen</button>
+      <button id="maniSave">Übernehmen</button>
+      <button class="ghost" id="maniClose">Schließen</button>
+    </span>
+  </div>
+  <div style="padding:10px 18px;font-size:13px;color:var(--muted)">
+    Bei vielen Dateien mit meist gleichen Metadaten: Projekt-Felder gelten für alle,
+    hier nur die <b>abweichenden</b> pro Datei (Sample, Read, Lane). Muster wird aus dem
+    Dateinamen vorgeschlagen (z.B. <code>S1_L001_R1.fastq</code> → sample S1, lane 001, read R1),
+    du korrigierst nur.
+  </div>
+  <div id="maniTableWrap" style="max-height:55vh;overflow:auto;padding:0 18px 18px"></div>
+</dialog>
 
 <dialog id="dlg">
   <div class="dh"><b id="dt">Output</b>
@@ -892,6 +918,86 @@ document.getElementById('pid').oninput = () => {};
 document.getElementById('profile').innerHTML =
   Object.entries(MODEL.profiles).map(([k,v]) => `<option value="${k}">${v.label}</option>`).join('');
 render();
+
+// ============ DATA LINKS / MANIFEST ============
+// manifest: [{file, sample, read, lane, path, md5}]
+let manifest = [];
+function loadManifest(){ try{ const r=localStorage.getItem(storeKey()+'::manifest'); if(r) manifest=JSON.parse(r);}catch(e){} }
+function saveManifest(){ try{ localStorage.setItem(storeKey()+'::manifest', JSON.stringify(manifest)); }catch(e){} }
+loadManifest();
+
+// Muster-Erkennung aus dem Dateinamen (universell, editierbar)
+function guessFromName(name){
+  const g = {file:name, sample:'', read:'', lane:'', path:'', md5:''};
+  // sample: alles vor dem ersten _S/_L/_R oder erster Block
+  let m = name.match(/^([A-Za-z0-9\-]+?)(?:[._-](?:S\d+|L\d{2,3}|R[12]|I[12]))/);
+  g.sample = m ? m[1] : (name.split(/[._-]/)[0] || '');
+  m = name.match(/[._-](R[12])[._-]/) || name.match(/[._-](R[12])\./);
+  g.read = m ? m[1] : '';
+  m = name.match(/[._-](L\d{2,3})[._-]/);
+  g.lane = m ? m[1] : '';
+  return g;
+}
+
+function renderManifest(){
+  const wrap = document.getElementById('maniTableWrap');
+  if(!manifest.length){ wrap.innerHTML='<p style="color:var(--muted);font-size:13px">Noch keine Dateien. „Dateien wählen" oder „📁 Ordner", dann „Muster erkennen".</p>'; return; }
+  const cols=['file','sample','read','lane','path','md5'];
+  let h='<table class="manitable"><thead><tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  manifest.forEach((row,i)=>{
+    h+='<tr>'+cols.map(c=>{
+      const val=(row[c]||'').replace(/"/g,'&quot;');
+      const ro = c==='file' ? 'readonly style="color:var(--muted)"' : '';
+      return `<td><input data-i="${i}" data-c="${c}" value="${val}" ${ro}></td>`;
+    }).join('')+'</tr>';
+  });
+  h+='</tbody></table>';
+  wrap.innerHTML=h;
+  wrap.querySelectorAll('input[data-c]').forEach(inp=>{
+    inp.oninput=e=>{ manifest[+e.target.dataset.i][e.target.dataset.c]=e.target.value; saveManifest(); };
+  });
+}
+
+document.getElementById('manifest').onclick=()=>{ renderManifest(); document.getElementById('mani').showModal(); };
+document.getElementById('maniClose').onclick=()=>document.getElementById('mani').close();
+
+// Dateien reinziehen/wählen (überall, auch Firefox)
+document.getElementById('maniFiles').onchange=e=>{
+  for(const f of e.target.files){
+    if(!manifest.find(r=>r.file===f.name)) manifest.push({file:f.name, sample:'', read:'', lane:'', path:f.webkitRelativePath||'', md5:''});
+  }
+  saveManifest(); renderManifest(); e.target.value='';
+};
+
+// Ordner öffnen (Chrome/Edge) — mit relativen Pfaden
+document.getElementById('maniDir').onclick=async ()=>{
+  if(!window.showDirectoryPicker){ alert('Ordner-Zugriff braucht Chrome/Edge. In Firefox: „Dateien wählen".'); return; }
+  try{
+    const dir=await window.showDirectoryPicker();
+    async function walk(handle, prefix){
+      for await (const [name,h] of handle.entries()){
+        if(h.kind==='file'){ if(/\.(fastq|fq|gz|bam|h5|h5ad|csv|tif|tiff|fcs|raw|mzml)$/i.test(name) && !manifest.find(r=>r.file===name))
+          manifest.push({file:name, sample:'', read:'', lane:'', path:(prefix?prefix+'/':'')+name, md5:''}); }
+        else if(h.kind==='directory'){ await walk(h, (prefix?prefix+'/':'')+name); }
+      }
+    }
+    await walk(dir,'');
+    saveManifest(); renderManifest();
+  }catch(err){ if(err.name!=='AbortError') alert(err); }
+};
+
+// Muster erkennen (Automuster-Vorschlag, editierbar)
+document.getElementById('maniGuess').onclick=()=>{
+  manifest = manifest.map(r=>{ const g=guessFromName(r.file); return {...r, sample:r.sample||g.sample, read:r.read||g.read, lane:r.lane||g.lane}; });
+  saveManifest(); renderManifest();
+};
+
+// Übernehmen: Manifest in values schreiben (+ als Teil des Exports)
+document.getElementById('maniSave').onclick=()=>{
+  values['_manifest'] = manifest;
+  const n=document.getElementById('autosave'); if(n) n.textContent=`✓ ${manifest.length} Dateien verknüpft (${new Set(manifest.map(r=>r.sample).filter(Boolean)).size} Samples)`;
+  autosave(); document.getElementById('mani').close();
+};
 
 // gespeicherte Werte wiederherstellen (nach render, damit die Felder existieren)
 function repaintFromValues(){
