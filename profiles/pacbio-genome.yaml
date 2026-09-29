@@ -1,0 +1,55 @@
+# =============================================================================
+# profiles/pacbio-genome.yaml — assay profile (OVERLAY on core_model.yaml)
+# Covers: PacBio long-read whole-genome sequencing → assembly + annotation.
+# The reference genome that a downstream RNA-seq project maps onto.
+# =============================================================================
+profile: PacBio-genome
+extends: core_model.yaml
+extractor: extractors/pacbio.py        # not yet written — auto fields simulated
+version: "0.1.0-draft"
+
+# Genome/assembly data goes to ENA (raw reads) + ENA/NCBI Assembly (the genome).
+# NOT ArrayExpress (that is for expression). This is the key difference from RNA-seq.
+deposition_targets: [ENA, NCBI-Assembly, Zenodo]
+
+requires:
+  - sample.organism_ref
+  - assembly.assembly_method
+  - assembly.genome_accession      # the durable pointer the RNA-seq project references
+
+defaults:
+  library_strategy: WGS
+  library_selection: RANDOM        # long-read WGS, NOT oligo-dT
+  library_source: genomic          # genomic, not transcriptomic
+  library_layout: single           # PacBio reads are single, long
+  technology_type: "OBI:0000626"   # DNA sequencing assay
+  platform: PacBio
+
+fields:
+  # --- the sequencing itself ------------------------------------------------
+  library:
+    read_type_pacbio: {source: project, category: technical, type: 'enum["HiFi/CCS","CLR"]', tier: bronze, why: "HiFi (CCS) vs CLR changes accuracy and every downstream step. HiFi is the modern default."}
+    mean_read_length: {source: auto, category: technical, type: number, tier: silver, why: "Long-read N50 — extracted from the reads. The whole point of PacBio."}
+    coverage_x:       {source: auto, category: technical, type: number, tier: silver, why: "Fold coverage. Under ~30x HiFi, the assembly is not trustworthy."}
+    cell_type_smrt:   {source: project, category: technical, type: string, required: false, tier: silver, why: "SMRT Cell chemistry/version. Provenance for the run."}
+
+  # --- the assembly (this is what makes it a genome project) ----------------
+  assembly:
+    assembly_method:   {source: human, category: technical, type: string, tier: bronze, why: "hifiasm / flye / canu + version. The single most important methodological choice — different assemblers give different genomes."}
+    assembly_version:  {source: human, category: technical, type: string, tier: bronze, why: "Your version of THIS assembly (v1, v2…). RNA-seq must map to an exact version."}
+    contig_n50:        {source: auto, category: technical, type: number, tier: silver, why: "Contiguity. Extracted. The headline assembly-quality number."}
+    total_length_bp:   {source: auto, category: technical, type: number, tier: silver, why: "Genome size. Extracted. Sanity-check against the expected size."}
+    busco_score:       {source: human, category: technical, type: string, required: false, tier: silver, why: "Completeness (e.g. 98.2% complete). Journals and reviewers ask for it."}
+    polishing:         {source: human, category: technical, type: string, required: false, tier: silver, why: "Racon/Medaka/none. Whether and how the assembly was polished."}
+    genome_accession:  {source: human, category: deposition, type: string, tier: silver, why: "ENA/NCBI Assembly accession (GCA_…). THE durable pointer that a downstream RNA-seq project references as its reference genome. Fill after deposition."}
+
+  # --- the annotation (so the genome is usable, not just a sequence) --------
+  annotation:
+    annotation_method: {source: human, category: technical, type: string, required: false, tier: silver, why: "Prokka / Bakta / BRAKER + version. How the genome was annotated. RNA-seq counts genes from THIS annotation."}
+    annotation_file:   {source: auto, category: technical, type: string, required: false, tier: silver, why: "The .gff/.gtf. Extracted. This is what featureCounts/STAR uses downstream."}
+    gene_count:        {source: auto, category: technical, type: number, required: false, tier: silver, why: "Number of annotated genes. Extracted. Sanity-check."}
+
+  # --- the file layer -------------------------------------------------------
+  file:
+    genome_fasta:      {source: auto, category: technical, type: string, tier: bronze, why: "The assembled genome .fasta. The primary product of this project."}
+    annotation_gff:    {source: auto, category: technical, type: string, required: false, tier: silver, why: "The annotation .gff. Ships WITH the fasta — a genome without annotation is half a resource."}
