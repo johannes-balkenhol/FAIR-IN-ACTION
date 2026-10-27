@@ -1,0 +1,83 @@
+
+=== FAIR + GDPR audit : /storage/users/job37yv/Projects ===  (64 projects)
+
+PROJECT                                  TIER    FLAGS
+----------------------------------------------------------------------------------------------------
+DECIDE_A06_fungi-coinfection             bronze  no DMP; no LICENSE; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. scripts/00_setup/patch_nb04_shrinkage.py)
+HPC-Storage-Cleanup                      bronze  no DMP; code not in git
+masterarbeit_sahar_wave_reservoir        bronze  GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. patch_v13.py)
+wave_binding_v1_ecog                     bronze  GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. patch_v13.py)
+WaveSheet_LocalPathfinding               bronze  code not in git; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. documents/reports/2026-10-14_wave-pathfinding-networks-report_v2.md)
+00_Glucnase_paper_Gromacs                —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+2026-09-29_new-RNAseq-project            —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+_loose_scripts_archive                   —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. patch_join.py)
+_sync_backup_flowsep2                    —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+AI                                       —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+Andom                                    —       no manifest/project.yaml; no DMP; no LICENSE
+ape-ecog-recordings                      —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+CarboDB-App-v2                           —       no manifest/project.yaml; no DMP; no LICENSE; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. resources/carboxylases/hmm_profiles/PF00016.hmm)
+CarboDB_motifs_collab                    —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+CarboDB_v3                               —       no manifest/project.yaml; no DMP; no LICENSE; version in folder name; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+Carboxylase_Aparna                       —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+carboxylase_project                      —       no manifest/project.yaml; no DMP; no LICENSE; code not in git
+Carboxylase_Server.git                   —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+CarboxylaseDatabase                      —       no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. data/pfam_hmms/PF00016.hmm)
+CarboxyPred_Clean                        —       no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name
+CarboxyPred_Final                        —       no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+CarboxyPred_Final_baseline_v1            —       no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+CarboxyPred_v2                           —       no manifest/project.yaml; no DMP; code not in git; version in folder name; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+Castanospermine                          —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. data/PDB structure/DB01816.txt)
+Cell-migration-tracking                  —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+cellwhisperer                            —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+cortex-model                             —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. scripts/patch_linearity_evoked.py)
+cortical-wave-reservoir                  —       no manifest/project.yaml; no DMP; no LICENSE; code not in git
+cRDM                                     —       no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. Documents/Meeting minutes/minutes_JB_cRDM&SMI_09122025.docx)
+CXCR7_platelet_analysis                  —       no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. documents/CXCR7_literature/RTK pathway platelets.txt)
+DataCrunch                               —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+DECIDE_A03_mouse_gut_microbiome          —       no manifest/project.yaml; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. analysis/05_gsea/tables/pathway_robustness.csv)
+DECIDE_A03_Sepidermidis_RNAseq           —       no manifest/project.yaml; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. data/secondary_data/reference/GCF_006094375.1)
+DECIDE_A03_Sepidermidis_SG1B_SG1C_genome —       no manifest/project.yaml; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. data/primary_data/GCF_000007645.1_bakta)
+DECIDE_A04_butyrate-organoid             —       no manifest/project.yaml
+DECIDE_A04_epithelial-coinfection        —       no manifest/project.yaml; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. analysis/network_diffusion/publication/pathway_heatmap.pdf)
+DECIDE_Z02_cycleHCR                      —       no manifest/project.yaml; code not in git; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. envs/cyclehcr/conda-meta/patsy-1.0.2-pyhcf101f3_0.json)
+Diffusion-model_latent-space             —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+epithelial_coinfection-model             —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+flowsep                                  —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. data/metadata/Patient data.xlsx)
+flowsep-sync                             —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+flowsep2                                 —       no manifest/project.yaml; no DMP; GDPR: sensitive but readable by world; GDPR: possible identifiers in names (verify, e.g. data/primary_data/flowsep_v1/patients.csv)
+flowsep2_jeesu_main                      —       no manifest/project.yaml; no DMP; no LICENSE; GDPR: sensitive but readable by world
+FlowSep_Vishnu_2025                      —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: possible identifiers in names (verify, e.g. scripts/scripts_vishnu_and_scaffold_2025/supervised_framework/patient_subtyping.ipynb)
+MetadataTemplates                        —       no manifest/project.yaml; no DMP; no LICENSE
+NC_autheticate                           —       no README; no manifest/project.yaml; no DMP; no LICENSE
+Neuropathy                               —       no manifest/project.yaml; no DMP; no LICENSE; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. data/raw_images/Diabetes/DB1114)
+NEW_RNAseq_bundle_extracted              —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world
+nextcloud_sync_organization              —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: possible identifiers in names (verify, e.g. epithelial_coinfection_CLEAN/analysis/GSEA/pathway_genes)
+non-local-processing                     —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+non-local-processing_python              —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+PANC_cancer                              —       no manifest/project.yaml; no DMP; code not in git; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. data/workspace/pathway_analysis.RData)
+PlateletWeb2.0                           —       no README; no manifest/project.yaml; no DMP; no LICENSE; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept; GDPR: possible identifiers in names (verify, e.g. scripts/tools/patch_notebook_20260615.py)
+Projects                                 —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+proteomics                               —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: sensitive but readable by world
+Pub_LLM_chatbot                          —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git
+Teaching                                 —       no manifest/project.yaml; no DMP; no LICENSE; GDPR: sensitive but readable by world; GDPR: no retention/deletion concept
+virtual-platelet                         —       no manifest/project.yaml; no DMP; no LICENSE; code not in git
+VRC-SMI-Integration                      —       no manifest/project.yaml; no DMP; no LICENSE; code not in git
+WaveSheet_bench_v2                       —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name; GDPR: possible identifiers in names (verify, e.g. WaveSheet_LocalPathfinding/results/tables/paths2d.csv)
+WaveSheet_tero_v4                        —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name; GDPR: possible identifiers in names (verify, e.g. WaveSheet_LocalPathfinding/documents/reports/2026-10-14_wave-pathfinding-networks-report_v2.md)
+WaveSheet_tero_v5                        —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name; GDPR: possible identifiers in names (verify, e.g. WaveSheet_LocalPathfinding/documents/reports/2026-10-14_wave-pathfinding-networks-report_v2.md)
+WaveSheet_terolocal                      —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; GDPR: possible identifiers in names (verify, e.g. WaveSheet_LocalPathfinding/documents/reports/2026-10-14_wave-pathfinding-networks-report_v2.md)
+WaveSheet_terolocal_v2                   —       no README; no manifest/project.yaml; no DMP; no LICENSE; code not in git; version in folder name; GDPR: possible identifiers in names (verify, e.g. WaveSheet_LocalPathfinding/documents/reports/2026-10-14_wave-pathfinding-networks-report_v2.md)
+
+--- ROOT-LEVEL ---
+  ⚠ manifest(s) loose at root (should live inside their project): butyrate_project.yaml, coinfection_project.yaml
+  ⚠ version sprawl 'carboxypred' ×4: CarboxyPred_Clean, CarboxyPred_Final, CarboxyPred_Final_baseline_v1, CarboxyPred_v2
+  ⚠ version sprawl 'flowsep' ×3: flowsep, flowsep-sync, flowsep2
+  ⚠ 33 loose file(s) at root: .fair_sync_filter.txt, 00_setup_A03_Sepidermidis_linked_projects.sh, 00_setup_masterarbeit_sahar.sh, 2026-09-29_FAIR-folder-SOP.zip, 2026-09-29_new-RNAseq-project.zip, 2026-10-19_FAIR-self-report_v1.md, 2026-10-19_bundle-vnext_intake-to-gold_blueprint.md, DECIDE A04 — Metadata Collection.html, FAIR-TRE-bundle_target-architecture_and-transfer-path.md, FAIR-bundle-vnext_blueprint_2026-10-19.md, FAIR-bundle_gates-and-transferable-components_spec.md, FAIR-bundle_gates-spec_2026-10-19.md …
+
+--- SUMMARY ---
+  tiers: bronze=5, —=59
+  GDPR flags on 42 project(s): 00_Glucnase_paper_Gromacs, 2026-09-29_new-RNAseq-project, CXCR7_platelet_analysis, CarboDB-App-v2, CarboDB_v3, CarboxyPred_Final, CarboxyPred_Final_baseline_v1, CarboxyPred_v2, CarboxylaseDatabase, Carboxylase_Aparna, Castanospermine, DECIDE_A03_Sepidermidis_RNAseq, DECIDE_A03_Sepidermidis_SG1B_SG1C_genome, DECIDE_A03_mouse_gut_microbiome, DECIDE_A04_epithelial-coinfection, DECIDE_A06_fungi-coinfection, DECIDE_Z02_cycleHCR, FlowSep_Vishnu_2025, NEW_RNAseq_bundle_extracted, Neuropathy, PANC_cancer, PlateletWeb2.0, Teaching, WaveSheet_LocalPathfinding, WaveSheet_bench_v2, WaveSheet_tero_v4, WaveSheet_tero_v5, WaveSheet_terolocal, WaveSheet_terolocal_v2, _loose_scripts_archive, _sync_backup_flowsep2, cRDM, cellwhisperer, cortex-model, flowsep, flowsep-sync, flowsep2, flowsep2_jeesu_main, masterarbeit_sahar_wave_reservoir, nextcloud_sync_organization, proteomics, wave_binding_v1_ecog
+
+(heuristic + read-only; PII-in-name and sensitivity flags are candidates to verify, not verdicts.)
+
+JSON written: fair_gdpr_2026-10-25.json
