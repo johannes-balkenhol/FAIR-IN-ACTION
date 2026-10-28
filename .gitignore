@@ -63,3 +63,6 @@ venv/
 *~
 use-case_bundle/
 *.zip
+
+reports/
+trash/
